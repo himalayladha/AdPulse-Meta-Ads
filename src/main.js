@@ -5,6 +5,7 @@
 import { initFacebookSDK, loginWithFacebook, logoutFacebook, checkLoginStatus } from './fb-sdk.js';
 import { fetchUserProfile, fetchBusinessPortfolios, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
 import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './dashboard.js';
+import { mockBusinessPortfolios, mockAdAccounts, getMockAccountInsights, getMockCampaigns, getMockAdSets, getMockPlacements } from './mock-data.js';
 
 // --- System Application Constant App ID ---
 const SYSTEM_FB_APP_ID = '36377800718500903';
@@ -140,16 +141,35 @@ async function loadMetricsData(forceFetch = false) {
       throw new Error("No active Facebook login session. Please authenticate first.");
     }
 
+    const isDemoMode = (state.accessToken === 'demo_mode_token');
+
     // 1. Fetch live portfolios and ad accounts if not cached or force requested
     if (state.businessPortfolios.length === 0 || forceFetch) {
       setLoading(true, "Fetching Business Portfolios...");
-      state.businessPortfolios = await fetchBusinessPortfolios(state.accessToken);
+      if (isDemoMode) {
+        state.businessPortfolios = mockBusinessPortfolios;
+      } else {
+        state.businessPortfolios = await fetchBusinessPortfolios(state.accessToken);
+      }
       populateBusinessPortfolioDropdown();
     }
 
     if (state.adAccounts.length === 0 || forceFetch) {
       setLoading(true, "Fetching authorized Meta Ad Accounts...");
-      state.adAccounts = await fetchAdAccounts(state.accessToken, state.activeBusinessId);
+      if (isDemoMode) {
+        state.adAccounts = mockAdAccounts.filter(acc =>
+          state.activeBusinessId === 'all' || acc.businessId === state.activeBusinessId
+        ).map(acc => ({
+          id: acc.id,
+          name: acc.name,
+          accountId: acc.id.replace('act_', ''),
+          currency: acc.currency,
+          timezone: acc.timezone,
+          status: acc.status
+        }));
+      } else {
+        state.adAccounts = await fetchAdAccounts(state.accessToken, state.activeBusinessId);
+      }
       populateAdAccountDropdown();
     }
 
@@ -170,12 +190,20 @@ async function loadMetricsData(forceFetch = false) {
     // 2. Fetch parallel insights, campaigns, adsets, and placements from Graph API
     setLoading(true, `Syncing Insights for ${activeAcc.name}...`);
     
-    const [dailyInsights, campaigns, adsets, placements] = await Promise.all([
-      fetchAccountDailyInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
-      fetchCampaignsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
-      fetchAdSetsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
-      fetchPlacementsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken)
-    ]);
+    let dailyInsights, campaigns, adsets, placements;
+    if (isDemoMode) {
+      dailyInsights = getMockAccountInsights(state.activeAdAccountId, state.activeDatePreset);
+      campaigns = getMockCampaigns(state.activeAdAccountId, state.activeDatePreset);
+      adsets = getMockAdSets(state.activeAdAccountId, state.activeDatePreset);
+      placements = getMockPlacements(state.activeAdAccountId, state.activeDatePreset);
+    } else {
+      [dailyInsights, campaigns, adsets, placements] = await Promise.all([
+        fetchAccountDailyInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
+        fetchCampaignsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
+        fetchAdSetsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
+        fetchPlacementsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken)
+      ]);
+    }
 
     // Cache dataset state
     state.activeDataset = {
@@ -189,15 +217,22 @@ async function loadMetricsData(forceFetch = false) {
     };
 
     // Set user profile in Sidebar
-    try {
-      const user = await fetchUserProfile(state.accessToken);
-      DOM.userAvatar.innerText = user.name.charAt(0).toUpperCase();
-      DOM.userAvatar.style.backgroundImage = user.avatar ? `url(${user.avatar})` : 'none';
-      DOM.userAvatar.style.backgroundSize = 'cover';
-      DOM.userName.innerText = user.name;
-      DOM.userStatus.innerText = "Syncing Live Meta API";
-    } catch (err) {
-      console.warn("Failed to fetch user metadata, using defaults:", err);
+    if (isDemoMode) {
+      DOM.userAvatar.innerText = "D";
+      DOM.userAvatar.style.backgroundImage = 'none';
+      DOM.userName.innerText = "Demo Workspace";
+      DOM.userStatus.innerText = "Demo Data Active";
+    } else {
+      try {
+        const user = await fetchUserProfile(state.accessToken);
+        DOM.userAvatar.innerText = user.name.charAt(0).toUpperCase();
+        DOM.userAvatar.style.backgroundImage = user.avatar ? `url(${user.avatar})` : 'none';
+        DOM.userAvatar.style.backgroundSize = 'cover';
+        DOM.userName.innerText = user.name;
+        DOM.userStatus.innerText = "Syncing Live Meta API";
+      } catch (err) {
+        console.warn("Failed to fetch user metadata, using defaults:", err);
+      }
     }
 
     // Trigger dashboard updates
@@ -303,8 +338,35 @@ async function handleFBLogin() {
     await loadMetricsData(true);
 
   } catch (error) {
-    console.error("Meta Auth Exception:", error);
-    alert(`Authentication Failed: ${error.message}`);
+    console.warn("Meta Auth failed, falling back to Demo Mode:", error);
+    alert(`Meta Auth Connection Interrupted (${error.message}). Auto-creating Demo Workspace to continue...`);
+    
+    state.accessToken = 'demo_mode_token';
+    localStorage.setItem('meta_ads_access_token', 'demo_mode_token');
+
+    DOM.authStatusContainer.innerHTML = `
+      <div class="auth-status-icon logged-in" style="background-color:rgba(16,185,129,0.1)">
+        <i data-lucide="user-check" style="color:var(--color-emerald)"></i>
+      </div>
+      <div class="auth-status-details">
+        <span class="auth-status-title" style="color:var(--color-emerald)">Demo Session Active</span>
+        <span class="auth-status-description">Simulated connection loaded.</span>
+      </div>
+    `;
+    
+    DOM.btnFbLogin.classList.add('hidden');
+    DOM.btnFbLogout.classList.remove('hidden');
+
+    if (window.lucide) window.lucide.createIcons();
+
+    // Hide login gate, reveal app container
+    if (DOM.loginGate) DOM.loginGate.classList.add('hidden');
+    if (DOM.appContainer) DOM.appContainer.classList.remove('hidden');
+    
+    // Switch to overview dashboard automatically
+    switchTab('overview');
+    
+    await loadMetricsData(true);
   } finally {
     setLoading(false);
   }
@@ -446,12 +508,17 @@ async function appStartup() {
 
     // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
     if (state.accessToken) {
-      try {
-        await fetchUserProfile(state.accessToken);
+      if (state.accessToken === 'demo_mode_token') {
         tokenValid = true;
-        console.log("Meta API access token verified successfully!");
-      } catch (err) {
-        console.warn("Cached access token invalid, checking Facebook SDK status...", err);
+        console.log("Demo session token verified successfully!");
+      } else {
+        try {
+          await fetchUserProfile(state.accessToken);
+          tokenValid = true;
+          console.log("Meta API access token verified successfully!");
+        } catch (err) {
+          console.warn("Cached access token invalid, checking Facebook SDK status...", err);
+        }
       }
     }
 
@@ -472,15 +539,27 @@ async function appStartup() {
     }
     
     if (tokenValid) {
-      DOM.authStatusContainer.innerHTML = `
-        <div class="auth-status-icon logged-in">
-          <i data-lucide="user-check"></i>
-        </div>
-        <div class="auth-status-details">
-          <span class="auth-status-title" style="color:var(--color-emerald)">Session Active</span>
-          <span class="auth-status-description">Token verified. Ready to sync campaigns.</span>
-        </div>
-      `;
+      if (state.accessToken === 'demo_mode_token') {
+        DOM.authStatusContainer.innerHTML = `
+          <div class="auth-status-icon logged-in" style="background-color:rgba(16,185,129,0.1)">
+            <i data-lucide="user-check" style="color:var(--color-emerald)"></i>
+          </div>
+          <div class="auth-status-details">
+            <span class="auth-status-title" style="color:var(--color-emerald)">Demo Session Active</span>
+            <span class="auth-status-description">Simulated connection loaded.</span>
+          </div>
+        `;
+      } else {
+        DOM.authStatusContainer.innerHTML = `
+          <div class="auth-status-icon logged-in">
+            <i data-lucide="user-check"></i>
+          </div>
+          <div class="auth-status-details">
+            <span class="auth-status-title" style="color:var(--color-emerald)">Session Active</span>
+            <span class="auth-status-description">Token verified. Ready to sync campaigns.</span>
+          </div>
+        `;
+      }
       DOM.btnFbLogin.classList.add('hidden');
       DOM.btnFbLogout.classList.remove('hidden');
       
