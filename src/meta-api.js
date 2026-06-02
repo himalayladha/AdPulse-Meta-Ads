@@ -101,10 +101,30 @@ export async function fetchUserProfile(accessToken) {
 }
 
 /**
- * Fetches list of Ad Accounts the User can access
+ * Fetches list of Business Portfolios (Business Managers) the User can access
  */
-export async function fetchAdAccounts(accessToken) {
-  const result = await callGraphAPI("me/adaccounts", {
+export async function fetchBusinessPortfolios(accessToken) {
+  try {
+    const result = await callGraphAPI("me/businesses", {
+      fields: "name,id"
+    }, accessToken);
+    
+    return (result.data || []).map(biz => ({
+      id: biz.id,
+      name: biz.name || `Business Portfolio #${biz.id}`
+    }));
+  } catch (err) {
+    console.warn("Failed to fetch business portfolios (businesses node):", err);
+    return [];
+  }
+}
+
+/**
+ * Fetches list of Ad Accounts the User can access, optionally filtered by Business Portfolio ID
+ */
+export async function fetchAdAccounts(accessToken, businessId = 'all') {
+  const endpoint = businessId === 'all' ? 'me/adaccounts' : `${businessId}/adaccounts`;
+  const result = await callGraphAPI(endpoint, {
     fields: "name,account_id,id,currency,timezone_name,account_status"
   }, accessToken);
 

@@ -66,6 +66,13 @@ function generateHistoricalTimeline(daysCount, baseSpend, baseCtr, baseCpc, base
 }
 
 // 1. Mock Ad Account Definitions
+// Mock Business Portfolio Definitions
+export const mockBusinessPortfolios = [
+  { id: "biz_11111", name: "Apex Group Holdings" },
+  { id: "biz_22222", name: "Alpha Digital Agency" }
+];
+
+// 1. Mock Ad Account Definitions
 export const mockAdAccounts = [
   {
     id: "act_1029384756",
@@ -73,6 +80,7 @@ export const mockAdAccounts = [
     currency: "INR",
     timezone: "Asia/Kolkata",
     status: "ACTIVE",
+    businessId: "biz_11111",
     baseConfig: {
       days: 90,
       spend: 35000, // Average daily spend in INR
@@ -107,6 +115,7 @@ export const mockAdAccounts = [
     currency: "INR",
     timezone: "Asia/Kolkata",
     status: "ACTIVE",
+    businessId: "biz_22222",
     baseConfig: {
       days: 90,
       spend: 60000, // Average daily spend in INR
@@ -139,6 +148,7 @@ export const mockAdAccounts = [
     currency: "INR",
     timezone: "Asia/Kolkata",
     status: "ACTIVE",
+    businessId: null, // Personal account
     baseConfig: {
       days: 90,
       spend: 120000, // Average daily spend in INR (₹1,20,000)

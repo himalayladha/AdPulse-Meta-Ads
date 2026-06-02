@@ -2,9 +2,9 @@
    ADSPULSE ANALYTICS - APPLICATION STATE MACHINE (ENTRYPOINT)
    ========================================================================== */
 
-import { mockAdAccounts, getMockAccountInsights, getMockCampaigns, getMockAdSets, getMockPlacements } from './mock-data.js';
+import { mockAdAccounts, mockBusinessPortfolios, getMockAccountInsights, getMockCampaigns, getMockAdSets, getMockPlacements } from './mock-data.js';
 import { initFacebookSDK, loginWithFacebook, logoutFacebook, checkLoginStatus } from './fb-sdk.js';
-import { fetchUserProfile, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
+import { fetchUserProfile, fetchBusinessPortfolios, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
 import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './dashboard.js';
 
 // --- Application Core State ---
@@ -12,12 +12,14 @@ const state = {
   mode: 'MOCK', // 'MOCK' or 'LIVE'
   appId: localStorage.getItem('meta_ads_app_id') || '36377800718500903',
   accessToken: localStorage.getItem('meta_ads_access_token') || 'EAIE9asGJRCcBRr2bjHINGKIb9OYeqEiDzjzAb5h46P9IZAqL5HtWyrds1dNU1LAk6geNPwUC0EzHZCjDjSOFaOaKpdMPKEeeAYZBBfcuC5E3sZBFiwZAKsge9PpkxFLR6sEUXI6FqZCk5w9gtzpt7YieY0KUkamCRy3PTM0ErbWeDTSGslmOFqhxwg7B0VNiqWfhPQ',
+  activeBusinessId: localStorage.getItem('meta_ads_active_business_id') || 'all',
   activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || 'act_4435760206742255',
   activeAdAccountName: '',
   activeDatePreset: 'last_30d',
   activeTab: 'overview',
   activeDataset: null, // Cached analytics payload
-  adAccounts: [] // List of available ad accounts
+  adAccounts: [], // List of available ad accounts
+  businessPortfolios: [] // List of Business Manager Portfolios
 };
 
 // --- DOM Cache Elements ---
@@ -29,6 +31,7 @@ const DOM = {
   pageSubtitle: document.getElementById('page-subtitle'),
   
   // Selectors
+  businessPortfolioSelect: document.getElementById('business-portfolio-select'),
   adAccountSelect: document.getElementById('ad-account-select'),
   dateRangeSelect: document.getElementById('date-range-select'),
   
@@ -161,15 +164,21 @@ async function loadMetricsData(forceFetch = false) {
         throw new Error("No active Facebook login session. Authenticate in the Setup & API tab first.");
       }
 
-      // 1. Fetch live accounts list if not cached or force requested
+      // 1. Fetch live portfolios and ad accounts if not cached or force requested
+      if (state.businessPortfolios.length === 0 || forceFetch) {
+        setLoading(true, "Fetching Business Portfolios...");
+        state.businessPortfolios = await fetchBusinessPortfolios(state.accessToken);
+        populateBusinessPortfolioDropdown();
+      }
+
       if (state.adAccounts.length === 0 || forceFetch) {
         setLoading(true, "Fetching authorized Meta Ad Accounts...");
-        state.adAccounts = await fetchAdAccounts(state.accessToken);
+        state.adAccounts = await fetchAdAccounts(state.accessToken, state.activeBusinessId);
         populateAdAccountDropdown();
       }
 
       if (state.adAccounts.length === 0) {
-        throw new Error("Your Facebook Account doesn't have any associated Meta Ad Accounts.");
+        throw new Error("No active ad accounts found under the selected Portfolio.");
       }
 
       // Check active selection validation
@@ -217,8 +226,21 @@ async function loadMetricsData(forceFetch = false) {
 
     } else {
       // --- MOCK MODE DATA RETRIEVAL ---
+      if (state.businessPortfolios.length === 0 || forceFetch) {
+        state.businessPortfolios = mockBusinessPortfolios.map(biz => ({
+          id: biz.id,
+          name: biz.name
+        }));
+        populateBusinessPortfolioDropdown();
+      }
+
       if (state.adAccounts.length === 0 || forceFetch) {
-        state.adAccounts = mockAdAccounts.map(acc => ({
+        const filteredMockAccounts = mockAdAccounts.filter(acc => {
+          if (state.activeBusinessId === 'all') return true;
+          return acc.businessId === state.activeBusinessId;
+        });
+
+        state.adAccounts = filteredMockAccounts.map(acc => ({
           id: acc.id,
           name: acc.name,
           currency: acc.currency,
@@ -226,6 +248,13 @@ async function loadMetricsData(forceFetch = false) {
           status: acc.status
         }));
         populateAdAccountDropdown();
+      }
+
+      if (state.adAccounts.length === 0) {
+        DOM.adAccountSelect.innerHTML = `<option value="none" disabled selected>No accounts in this portfolio</option>`;
+        state.activeDataset = null;
+        setLoading(false);
+        return;
       }
 
       if (!state.activeAdAccountId || !state.adAccounts.find(acc => acc.id === state.activeAdAccountId)) {
@@ -294,6 +323,28 @@ function populateAdAccountDropdown() {
   
   if (state.activeAdAccountId) {
     DOM.adAccountSelect.value = state.activeAdAccountId;
+  }
+}
+
+function populateBusinessPortfolioDropdown() {
+  if (!DOM.businessPortfolioSelect) return;
+  DOM.businessPortfolioSelect.innerHTML = "";
+
+  // Base Option for personal profiles or all manager entities
+  const baseOpt = document.createElement("option");
+  baseOpt.value = "all";
+  baseOpt.innerText = "All / Personal Accounts";
+  DOM.businessPortfolioSelect.appendChild(baseOpt);
+
+  state.businessPortfolios.forEach(biz => {
+    const opt = document.createElement("option");
+    opt.value = biz.id;
+    opt.innerText = biz.name;
+    DOM.businessPortfolioSelect.appendChild(opt);
+  });
+
+  if (state.activeBusinessId) {
+    DOM.businessPortfolioSelect.value = state.activeBusinessId;
   }
 }
 
@@ -549,6 +600,15 @@ function bindEvents() {
   DOM.btnFbLogout.addEventListener('click', handleFBLogout);
 
   // 4. Form selectors triggers
+  DOM.businessPortfolioSelect.addEventListener('change', (e) => {
+    state.activeBusinessId = e.target.value;
+    localStorage.setItem('meta_ads_active_business_id', e.target.value);
+    
+    // Invalidate currently selected ad account to auto-select the first matching account
+    state.activeAdAccountId = "";
+    loadMetricsData(true); // force reload ad accounts under new portfolio
+  });
+
   DOM.adAccountSelect.addEventListener('change', (e) => {
     state.activeAdAccountId = e.target.value;
     localStorage.setItem('meta_ads_active_ad_account_id', e.target.value);
