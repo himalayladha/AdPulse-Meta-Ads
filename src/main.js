@@ -556,6 +556,31 @@ function bindEvents() {
     });
   }
 
+  // Generic Copy Button Action
+  document.querySelectorAll('.btn-copy-inline').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const copyText = btn.getAttribute('data-copy');
+      if (!copyText) return;
+      try {
+        await navigator.clipboard.writeText(copyText);
+        const span = btn.querySelector('span');
+        const icon = btn.querySelector('i');
+        
+        if (span) span.innerText = "Copied!";
+        if (icon) icon.setAttribute('data-lucide', 'check');
+        if (window.lucide) window.lucide.createIcons();
+
+        setTimeout(() => {
+          if (span) span.innerText = "Copy";
+          if (icon) icon.setAttribute('data-lucide', 'copy');
+          if (window.lucide) window.lucide.createIcons();
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy text:", err);
+      }
+    });
+  });
+
   // 4. Form selectors triggers
   DOM.businessPortfolioSelect.addEventListener('change', (e) => {
     state.activeBusinessId = e.target.value;

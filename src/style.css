@@ -1632,6 +1632,19 @@ a:hover {
   color: var(--text-dim);
 }
 
+.login-footer a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  border-bottom: 1px solid transparent;
+}
+
+.login-footer a:hover {
+  color: var(--color-indigo);
+  border-bottom-color: var(--color-indigo);
+}
+
 #btn-gate-fb-login {
   padding: 14px 20px;
   font-size: 14px;
