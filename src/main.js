@@ -91,19 +91,11 @@ function updateModeUI() {
     DOM.modeBadge.innerText = "LIVE API";
     DOM.toggleModeTxt.innerText = "Switch to Demo Mode";
     DOM.toggleModeBtn.classList.add('live-active');
-    DOM.segmentLiveBtn.classList.add('active');
-    DOM.segmentMockBtn.classList.remove('active');
-    DOM.mockInfoPanel.classList.remove('show');
-    DOM.liveSetupForm.classList.add('show');
   } else {
     DOM.modeBadge.className = "mode-badge demo";
     DOM.modeBadge.innerText = "DEMO";
     DOM.toggleModeTxt.innerText = "Go Live with Meta";
     DOM.toggleModeBtn.classList.remove('live-active');
-    DOM.segmentMockBtn.classList.add('active');
-    DOM.segmentLiveBtn.classList.remove('active');
-    DOM.liveSetupForm.classList.remove('show');
-    DOM.mockInfoPanel.classList.add('show');
   }
 }
 
@@ -422,6 +414,13 @@ function bindEvents() {
     if (state.mode === 'LIVE') {
       state.mode = 'MOCK';
       updateModeUI();
+      
+      // Auto-toggle panels in Settings to Mock view
+      DOM.segmentMockBtn.classList.add('active');
+      DOM.segmentLiveBtn.classList.remove('active');
+      DOM.liveSetupForm.classList.remove('show');
+      DOM.mockInfoPanel.classList.add('show');
+
       await loadMetricsData(true);
     } else {
       if (state.appId) {
@@ -435,6 +434,12 @@ function bindEvents() {
             state.mode = 'LIVE';
             updateModeUI();
             
+            // Auto-toggle panels in Settings to Live view
+            DOM.segmentLiveBtn.classList.add('active');
+            DOM.segmentMockBtn.classList.remove('active');
+            DOM.mockInfoPanel.classList.remove('show');
+            DOM.liveSetupForm.classList.add('show');
+
             DOM.authStatusContainer.innerHTML = `
               <div class="auth-status-icon logged-in">
                 <i data-lucide="user-check"></i>
@@ -462,11 +467,18 @@ function bindEvents() {
       if (state.appId && state.accessToken) {
         state.mode = 'LIVE';
         updateModeUI();
+        
+        DOM.segmentLiveBtn.classList.add('active');
+        DOM.segmentMockBtn.classList.remove('active');
+        DOM.mockInfoPanel.classList.remove('show');
+        DOM.liveSetupForm.classList.add('show');
+
         await loadMetricsData(true);
       } else {
-        // Redirect to configuration settings panel
-        alert("Live mode requires setting up a Meta App ID. We are redirecting you to the Setup & API tab!");
+        // Redirect to configuration settings panel and click Live Mode to show form
+        alert("Live mode requires setting up a Meta App ID. We are redirecting you to the Setup page so you can configure it.");
         switchTab('settings');
+        DOM.segmentLiveBtn.click();
       }
     }
   });
@@ -481,6 +493,12 @@ function bindEvents() {
   });
 
   DOM.segmentLiveBtn.addEventListener('click', async () => {
+    // ALWAYS toggle UI panels to make the credentials setup form visible immediately!
+    DOM.segmentLiveBtn.classList.add('active');
+    DOM.segmentMockBtn.classList.remove('active');
+    DOM.mockInfoPanel.classList.remove('show');
+    DOM.liveSetupForm.classList.add('show');
+
     if (state.mode !== 'LIVE') {
       if (state.appId) {
         setLoading(true, "Connecting to Facebook...");
@@ -507,21 +525,11 @@ function bindEvents() {
             if (window.lucide) window.lucide.createIcons();
             
             await loadMetricsData(true);
-            setLoading(false);
-            return;
           }
         } catch (err) {
           console.warn("Auto-login check failed:", err);
         }
         setLoading(false);
-      }
-
-      if (state.appId && state.accessToken) {
-        state.mode = 'LIVE';
-        updateModeUI();
-        await loadMetricsData(true);
-      } else {
-        alert("Please paste your App ID below and complete 'Login with Facebook' first!");
       }
     }
   });
@@ -614,6 +622,19 @@ async function appStartup() {
     } catch (err) {
       console.warn("Could not check Facebook status during boot:", err);
     }
+  }
+
+  // Initialize Setup & API tab panel view state to match active mode
+  if (state.mode === 'LIVE') {
+    DOM.segmentLiveBtn.classList.add('active');
+    DOM.segmentMockBtn.classList.remove('active');
+    DOM.mockInfoPanel.classList.remove('show');
+    DOM.liveSetupForm.classList.add('show');
+  } else {
+    DOM.segmentMockBtn.classList.add('active');
+    DOM.segmentLiveBtn.classList.remove('active');
+    DOM.liveSetupForm.classList.remove('show');
+    DOM.mockInfoPanel.classList.add('show');
   }
 
   // Finalize icons and load base reports
