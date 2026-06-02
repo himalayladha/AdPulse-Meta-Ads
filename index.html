@@ -155,6 +155,23 @@
       <!-- Dashboard View (Overview Panel) -->
       <section class="tab-panel active" id="panel-overview">
         
+        <!-- Mock Mode Quick Setup Banner -->
+        <div class="demo-setup-banner glass-card" id="demo-setup-banner">
+          <div class="banner-content">
+            <div class="banner-icon">
+              <i data-lucide="sparkles"></i>
+            </div>
+            <div class="banner-text">
+              <h3>See Your Own Meta Ads Data</h3>
+              <p>Connect your Facebook account to automatically sync your Business Portfolios, Ad Accounts, and campaign analytics instantly.</p>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-quick-fb-login">
+            <i data-lucide="facebook"></i>
+            <span>Connect via Facebook Login</span>
+          </button>
+        </div>
+
         <!-- KPI Summary Cards Grid -->
         <div class="kpi-grid">
           <!-- KPI 1: Spend -->
@@ -482,12 +499,12 @@
 
               <div id="live-setup-form" class="hidden-fade">
                 <div class="settings-form-group">
-                  <label for="fb-app-id" class="form-label">Facebook App ID <span class="required">*</span></label>
+                  <label for="fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
                   <div class="input-icon-wrap">
                     <i data-lucide="globe"></i>
-                    <input type="text" id="fb-app-id" placeholder="e.g., 847293810283948" value="">
+                    <input type="text" id="fb-app-id" placeholder="Leave blank to use default App ID" value="">
                   </div>
-                  <p class="form-help-text">Your unique App Identifier obtained from Meta Developers Panel.</p>
+                  <p class="form-help-text">Enter a custom Developer App ID, or leave blank to use the built-in system App ID.</p>
                 </div>
 
                 <div class="settings-form-group">

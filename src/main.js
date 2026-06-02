@@ -44,6 +44,8 @@ const DOM = {
   mockInfoPanel: document.getElementById('mock-info-panel'),
   liveSetupForm: document.getElementById('live-setup-form'),
   btnTriggerLiveSwitch: document.getElementById('btn-trigger-live-switch'),
+  btnQuickFbLogin: document.getElementById('btn-quick-fb-login'),
+  demoSetupBanner: document.getElementById('demo-setup-banner'),
   
   // Settings Live Inputs
   fbAppIdInput: document.getElementById('fb-app-id'),
@@ -360,10 +362,11 @@ function triggerDashboardRefresh() {
 // --- Live Meta API Authentication Process ---
 
 async function handleFBLogin() {
-  const customId = DOM.fbAppIdInput.value.trim();
+  let customId = DOM.fbAppIdInput.value.trim();
   if (!customId) {
-    alert("Please enter a valid Facebook App ID to initiate login.");
-    return;
+    // Fallback to default system App ID
+    customId = '36377800718500903';
+    DOM.fbAppIdInput.value = customId;
   }
 
   setLoading(true, "Connecting Facebook SDK...");
@@ -400,6 +403,11 @@ async function handleFBLogin() {
     // 4. Update mode and fetch live records
     state.mode = 'LIVE';
     updateModeUI();
+    
+    // Hide quick-setup banner
+    if (DOM.demoSetupBanner) {
+      DOM.demoSetupBanner.classList.add('hidden');
+    }
     
     // Switch to overview dashboard automatically
     switchTab('overview');
@@ -443,6 +451,11 @@ async function handleFBLogout() {
   state.mode = 'MOCK';
   updateModeUI();
   
+  // Show quick-setup banner
+  if (DOM.demoSetupBanner) {
+    DOM.demoSetupBanner.classList.remove('hidden');
+  }
+  
   await loadMetricsData(true);
   setLoading(false);
 }
@@ -466,6 +479,11 @@ function bindEvents() {
       state.mode = 'MOCK';
       updateModeUI();
       
+      // Show quick-setup banner
+      if (DOM.demoSetupBanner) {
+        DOM.demoSetupBanner.classList.remove('hidden');
+      }
+      
       // Auto-toggle panels in Settings to Mock view
       DOM.segmentMockBtn.classList.add('active');
       DOM.segmentLiveBtn.classList.remove('active');
@@ -484,6 +502,11 @@ function bindEvents() {
             localStorage.setItem('meta_ads_access_token', status.accessToken);
             state.mode = 'LIVE';
             updateModeUI();
+            
+            // Hide quick-setup banner
+            if (DOM.demoSetupBanner) {
+              DOM.demoSetupBanner.classList.add('hidden');
+            }
             
             // Auto-toggle panels in Settings to Live view
             DOM.segmentLiveBtn.classList.add('active');
@@ -519,6 +542,11 @@ function bindEvents() {
         state.mode = 'LIVE';
         updateModeUI();
         
+        // Hide quick-setup banner
+        if (DOM.demoSetupBanner) {
+          DOM.demoSetupBanner.classList.add('hidden');
+        }
+        
         DOM.segmentLiveBtn.classList.add('active');
         DOM.segmentMockBtn.classList.remove('active');
         DOM.mockInfoPanel.classList.remove('show');
@@ -539,6 +567,12 @@ function bindEvents() {
     if (state.mode !== 'MOCK') {
       state.mode = 'MOCK';
       updateModeUI();
+      
+      // Show quick-setup banner
+      if (DOM.demoSetupBanner) {
+        DOM.demoSetupBanner.classList.remove('hidden');
+      }
+      
       loadMetricsData(true);
     }
   });
@@ -561,6 +595,11 @@ function bindEvents() {
             localStorage.setItem('meta_ads_access_token', status.accessToken);
             state.mode = 'LIVE';
             updateModeUI();
+            
+            // Hide quick-setup banner
+            if (DOM.demoSetupBanner) {
+              DOM.demoSetupBanner.classList.add('hidden');
+            }
             
             DOM.authStatusContainer.innerHTML = `
               <div class="auth-status-icon logged-in">
@@ -588,6 +627,11 @@ function bindEvents() {
   DOM.btnTriggerLiveSwitch.addEventListener('click', () => {
     DOM.segmentLiveBtn.click();
   });
+
+  // Quick Facebook Login banner trigger
+  if (DOM.btnQuickFbLogin) {
+    DOM.btnQuickFbLogin.addEventListener('click', handleFBLogin);
+  }
 
   // Save App ID to state as the user types
   DOM.fbAppIdInput.addEventListener('input', (e) => {
@@ -698,6 +742,11 @@ async function appStartup() {
         `;
         DOM.btnFbLogin.classList.add('hidden');
         DOM.btnFbLogout.classList.remove('hidden');
+        
+        // Hide quick-setup banner
+        if (DOM.demoSetupBanner) {
+          DOM.demoSetupBanner.classList.add('hidden');
+        }
       } else {
         // No active session or expired
         localStorage.removeItem('meta_ads_access_token');

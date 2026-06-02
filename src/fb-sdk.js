@@ -23,7 +23,7 @@ function injectSDKScript() {
     jsScript.defer = true;
     
     jsScript.onload = () => resolve();
-    jsScript.onerror = (err) => reject(new Error("Failed to load Facebook SDK script from Meta CDN. Check connection."));
+    jsScript.onerror = (err) => reject(new Error("Failed to load Facebook SDK. This is typically caused by an ad-blocker, tracking blocker, or privacy shield blocking social scripts. Please temporarily disable it to connect your Facebook account."));
     
     firstScript.parentNode.insertBefore(jsScript, firstScript);
   });
@@ -81,7 +81,7 @@ export function loginWithFacebook() {
         reject(new Error("User cancelled Facebook Login or did not fully authorize the application."));
       }
     }, {
-      scope: 'ads_read,public_profile',
+      scope: 'ads_read,public_profile,business_management',
       return_scopes: true
     });
   });
