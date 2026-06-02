@@ -41,34 +41,21 @@
         </div>
       </div>
 
-      <div class="alert-box warning text-xs">
-        <i data-lucide="alert-triangle"></i>
-        <div>
-          <strong>"App not active" error?</strong> Meta restricts apps in Development Mode to registered developers and testers. To log in with any Facebook account, expand <strong>Advanced Settings</strong> below to provide your own App ID, or add users under App Roles in the Developer Console.
-        </div>
-      </div>
-
       <div class="login-form">
         <button class="btn btn-primary btn-block btn-lg" id="btn-gate-fb-login">
           <i data-lucide="facebook"></i>
           <span>Login with Facebook</span>
         </button>
 
-        <!-- Advanced Accordion Toggle -->
-        <div class="advanced-gate-settings">
-          <button type="button" class="btn-toggle-advanced" id="btn-toggle-advanced-gate">
-            <i data-lucide="sliders"></i>
-            <span>Advanced Settings (Custom App ID)</span>
-          </button>
-          <div class="advanced-gate-fields hidden" id="advanced-gate-fields">
-            <div class="settings-form-group">
-              <label for="gate-fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
-              <div class="input-icon-wrap">
-                <i data-lucide="globe"></i>
-                <input type="text" id="gate-fb-app-id" placeholder="Leave blank to use default App ID" value="">
-              </div>
-              <p class="form-help-text">Use your own Meta Developer App ID if you see "App not active" errors.</p>
+        <!-- Secret Developer Override Panel (revealed by double-clicking the brand logo) -->
+        <div class="developer-panel hidden" id="developer-panel">
+          <div class="settings-form-group">
+            <label for="gate-fb-app-id" class="form-label text-xs">Developer App ID Override</label>
+            <div class="input-icon-wrap">
+              <i data-lucide="globe"></i>
+              <input type="text" id="gate-fb-app-id" placeholder="Leave blank to use default App ID" value="">
             </div>
+            <p class="form-help-text">Overriding Default App ID: 36377800718500903</p>
           </div>
         </div>
       </div>
@@ -492,15 +479,6 @@
               <i data-lucide="key-round"></i> API Credentials Setup
             </h3>
             <div class="settings-card-body">
-              <div class="settings-form-group">
-                <label for="fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
-                <div class="input-icon-wrap">
-                  <i data-lucide="globe"></i>
-                  <input type="text" id="fb-app-id" placeholder="Leave blank to use default App ID" value="">
-                </div>
-                <p class="form-help-text">Enter a custom Developer App ID, or leave blank to use the built-in system App ID.</p>
-              </div>
-
               <div class="settings-form-group">
                 <label class="form-label">Facebook Auth Session</label>
                 <div class="auth-status-container" id="auth-status-container">

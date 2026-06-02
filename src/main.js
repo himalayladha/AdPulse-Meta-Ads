@@ -40,12 +40,11 @@ const DOM = {
   loginGate: document.getElementById('login-gate'),
   appContainer: document.querySelector('.app-container'),
   btnGateFbLogin: document.getElementById('btn-gate-fb-login'),
+  loginBrand: document.querySelector('.login-brand'),
+  developerPanel: document.getElementById('developer-panel'),
   gateFbAppIdInput: document.getElementById('gate-fb-app-id'),
-  btnToggleAdvancedGate: document.getElementById('btn-toggle-advanced-gate'),
-  advancedGateFields: document.getElementById('advanced-gate-fields'),
   
   // Settings Live Inputs
-  fbAppIdInput: document.getElementById('fb-app-id'),
   btnFbLogin: document.getElementById('btn-fb-login'),
   btnFbLogout: document.getElementById('btn-fb-logout'),
   authStatusContainer: document.getElementById('auth-status-container'),
@@ -369,30 +368,20 @@ function bindEvents() {
   }
 
   // 3. Custom App ID inputs listeners
-  if (DOM.fbAppIdInput) {
-    DOM.fbAppIdInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      state.appId = val;
-      localStorage.setItem('meta_ads_app_id', val);
-      if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = val;
-    });
-  }
-
   if (DOM.gateFbAppIdInput) {
     DOM.gateFbAppIdInput.addEventListener('input', (e) => {
       const val = e.target.value.trim();
       state.appId = val;
       localStorage.setItem('meta_ads_app_id', val);
-      if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = val;
     });
   }
 
-  // 4. Toggle Advanced Accordion
-  if (DOM.btnToggleAdvancedGate) {
-    DOM.btnToggleAdvancedGate.addEventListener('click', (e) => {
+  // 4. Secret Developer Panel Toggle (Double Click Logo)
+  if (DOM.loginBrand) {
+    DOM.loginBrand.addEventListener('dblclick', (e) => {
       e.preventDefault();
-      if (DOM.advancedGateFields) {
-        DOM.advancedGateFields.classList.toggle('hidden');
+      if (DOM.developerPanel) {
+        DOM.developerPanel.classList.toggle('hidden');
       }
     });
   }
@@ -446,9 +435,8 @@ async function appStartup() {
 
   // Populate App ID fields if stored
   if (state.appId) {
-    if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = state.appId;
     if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = state.appId;
-    if (DOM.advancedGateFields) DOM.advancedGateFields.classList.remove('hidden');
+    if (DOM.developerPanel) DOM.developerPanel.classList.remove('hidden');
   }
 
   setLoading(true, "Checking Facebook auth status...");
