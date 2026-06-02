@@ -10,9 +10,9 @@ import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './d
 // --- Application Core State ---
 const state = {
   mode: 'MOCK', // 'MOCK' or 'LIVE'
-  appId: localStorage.getItem('meta_ads_app_id') || '',
-  accessToken: localStorage.getItem('meta_ads_access_token') || '',
-  activeAdAccountId: '',
+  appId: localStorage.getItem('meta_ads_app_id') || '36377800718500903',
+  accessToken: localStorage.getItem('meta_ads_access_token') || 'EAIE9asGJRCcBRr2bjHINGKIb9OYeqEiDzjzAb5h46P9IZAqL5HtWyrds1dNU1LAk6geNPwUC0EzHZCjDjSOFaOaKpdMPKEeeAYZBBfcuC5E3sZBFiwZAKsge9PpkxFLR6sEUXI6FqZCk5w9gtzpt7YieY0KUkamCRy3PTM0ErbWeDTSGslmOFqhxwg7B0VNiqWfhPQ',
+  activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || 'act_4435760206742255',
   activeAdAccountName: '',
   activeDatePreset: 'last_30d',
   activeTab: 'overview',
@@ -551,6 +551,7 @@ function bindEvents() {
   // 4. Form selectors triggers
   DOM.adAccountSelect.addEventListener('change', (e) => {
     state.activeAdAccountId = e.target.value;
+    localStorage.setItem('meta_ads_active_ad_account_id', e.target.value);
     loadMetricsData();
   });
 
@@ -592,14 +593,37 @@ async function appStartup() {
     
     setLoading(true, "Checking Facebook auth status...");
     try {
-      await initFacebookSDK(state.appId);
-      const status = await checkLoginStatus();
+      let tokenValid = false;
+
+      // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
+      if (state.accessToken) {
+        try {
+          await fetchUserProfile(state.accessToken);
+          tokenValid = true;
+          console.log("Meta API access token verified successfully!");
+        } catch (err) {
+          console.warn("Cached access token invalid, checking Facebook SDK status...", err);
+        }
+      }
+
+      // 2. If token is invalid/missing, fallback to Facebook SDK check
+      if (!tokenValid) {
+        try {
+          await initFacebookSDK(state.appId);
+          const status = await checkLoginStatus();
+          
+          if (status && status.accessToken) {
+            state.accessToken = status.accessToken;
+            localStorage.setItem('meta_ads_access_token', status.accessToken);
+            tokenValid = true;
+          }
+        } catch (sdkErr) {
+          console.warn("Facebook SDK status retrieval failed:", sdkErr);
+        }
+      }
       
-      if (status && status.accessToken) {
-        // Automatically authenticate and switch to LIVE
-        state.accessToken = status.accessToken;
-        localStorage.setItem('meta_ads_access_token', status.accessToken);
-        
+      if (tokenValid) {
+        // Automatically switch to LIVE mode
         state.mode = 'LIVE';
         updateModeUI();
         
@@ -608,8 +632,8 @@ async function appStartup() {
             <i data-lucide="user-check"></i>
           </div>
           <div class="auth-status-details">
-            <span class="auth-status-title" style="color:var(--color-emerald)">Session Restored</span>
-            <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
+            <span class="auth-status-title" style="color:var(--color-emerald)">Session Active</span>
+            <span class="auth-status-description">Token verified. Ready to sync campaigns.</span>
           </div>
         `;
         DOM.btnFbLogin.classList.add('hidden');
