@@ -418,17 +418,51 @@ function bindEvents() {
   });
 
   // 2. Main Mode Toggles
-  DOM.toggleModeBtn.addEventListener('click', () => {
+  DOM.toggleModeBtn.addEventListener('click', async () => {
     if (state.mode === 'LIVE') {
       state.mode = 'MOCK';
       updateModeUI();
-      loadMetricsData(true);
+      await loadMetricsData(true);
     } else {
+      if (state.appId) {
+        setLoading(true, "Connecting to Facebook...");
+        try {
+          await initFacebookSDK(state.appId);
+          const status = await checkLoginStatus();
+          if (status && status.accessToken) {
+            state.accessToken = status.accessToken;
+            localStorage.setItem('meta_ads_access_token', status.accessToken);
+            state.mode = 'LIVE';
+            updateModeUI();
+            
+            DOM.authStatusContainer.innerHTML = `
+              <div class="auth-status-icon logged-in">
+                <i data-lucide="user-check"></i>
+              </div>
+              <div class="auth-status-details">
+                <span class="auth-status-title" style="color:var(--color-emerald)">Connected Session</span>
+                <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
+              </div>
+            `;
+            DOM.btnFbLogin.classList.add('hidden');
+            DOM.btnFbLogout.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+            
+            await loadMetricsData(true);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("Auto-login check failed:", err);
+        }
+        setLoading(false);
+      }
+
       // Check if already authenticated, if yes, just toggle
       if (state.appId && state.accessToken) {
         state.mode = 'LIVE';
         updateModeUI();
-        loadMetricsData(true);
+        await loadMetricsData(true);
       } else {
         // Redirect to configuration settings panel
         alert("Live mode requires setting up a Meta App ID. We are redirecting you to the Setup & API tab!");
@@ -446,12 +480,46 @@ function bindEvents() {
     }
   });
 
-  DOM.segmentLiveBtn.addEventListener('click', () => {
+  DOM.segmentLiveBtn.addEventListener('click', async () => {
     if (state.mode !== 'LIVE') {
+      if (state.appId) {
+        setLoading(true, "Connecting to Facebook...");
+        try {
+          await initFacebookSDK(state.appId);
+          const status = await checkLoginStatus();
+          if (status && status.accessToken) {
+            state.accessToken = status.accessToken;
+            localStorage.setItem('meta_ads_access_token', status.accessToken);
+            state.mode = 'LIVE';
+            updateModeUI();
+            
+            DOM.authStatusContainer.innerHTML = `
+              <div class="auth-status-icon logged-in">
+                <i data-lucide="user-check"></i>
+              </div>
+              <div class="auth-status-details">
+                <span class="auth-status-title" style="color:var(--color-emerald)">Connected Session</span>
+                <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
+              </div>
+            `;
+            DOM.btnFbLogin.classList.add('hidden');
+            DOM.btnFbLogout.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+            
+            await loadMetricsData(true);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("Auto-login check failed:", err);
+        }
+        setLoading(false);
+      }
+
       if (state.appId && state.accessToken) {
         state.mode = 'LIVE';
         updateModeUI();
-        loadMetricsData(true);
+        await loadMetricsData(true);
       } else {
         alert("Please paste your App ID below and complete 'Login with Facebook' first!");
       }
@@ -514,37 +582,37 @@ async function appStartup() {
   if (state.appId) {
     DOM.fbAppIdInput.value = state.appId;
     
-    // If accessToken is present, try to verify
-    if (state.accessToken) {
-      setLoading(true, "Restoring Facebook session...");
-      try {
-        await initFacebookSDK(state.appId);
-        const status = await checkLoginStatus();
+    setLoading(true, "Checking Facebook auth status...");
+    try {
+      await initFacebookSDK(state.appId);
+      const status = await checkLoginStatus();
+      
+      if (status && status.accessToken) {
+        // Automatically authenticate and switch to LIVE
+        state.accessToken = status.accessToken;
+        localStorage.setItem('meta_ads_access_token', status.accessToken);
         
-        if (status && status.accessToken) {
-          // Token verified! Keep LIVE mode active
-          state.mode = 'LIVE';
-          updateModeUI();
-          
-          DOM.authStatusContainer.innerHTML = `
-            <div class="auth-status-icon logged-in">
-              <i data-lucide="user-check"></i>
-            </div>
-            <div class="auth-status-details">
-              <span class="auth-status-title" style="color:var(--color-emerald)">Session Restored</span>
-              <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
-            </div>
-          `;
-          DOM.btnFbLogin.classList.add('hidden');
-          DOM.btnFbLogout.classList.remove('hidden');
-        } else {
-          // Token expired
-          localStorage.removeItem('meta_ads_access_token');
-          state.accessToken = '';
-        }
-      } catch (err) {
-        console.warn("Could not restore session during boot:", err);
+        state.mode = 'LIVE';
+        updateModeUI();
+        
+        DOM.authStatusContainer.innerHTML = `
+          <div class="auth-status-icon logged-in">
+            <i data-lucide="user-check"></i>
+          </div>
+          <div class="auth-status-details">
+            <span class="auth-status-title" style="color:var(--color-emerald)">Session Restored</span>
+            <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
+          </div>
+        `;
+        DOM.btnFbLogin.classList.add('hidden');
+        DOM.btnFbLogout.classList.remove('hidden');
+      } else {
+        // No active session or expired
+        localStorage.removeItem('meta_ads_access_token');
+        state.accessToken = '';
       }
+    } catch (err) {
+      console.warn("Could not check Facebook status during boot:", err);
     }
   }
 
