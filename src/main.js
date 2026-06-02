@@ -11,6 +11,7 @@ const SYSTEM_FB_APP_ID = '36377800718500903';
 
 // --- Application Core State ---
 const state = {
+  appId: localStorage.getItem('meta_ads_app_id') || '',
   accessToken: localStorage.getItem('meta_ads_access_token') || '',
   activeBusinessId: localStorage.getItem('meta_ads_active_business_id') || 'all',
   activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || '',
@@ -39,8 +40,12 @@ const DOM = {
   loginGate: document.getElementById('login-gate'),
   appContainer: document.querySelector('.app-container'),
   btnGateFbLogin: document.getElementById('btn-gate-fb-login'),
+  gateFbAppIdInput: document.getElementById('gate-fb-app-id'),
+  btnToggleAdvancedGate: document.getElementById('btn-toggle-advanced-gate'),
+  advancedGateFields: document.getElementById('advanced-gate-fields'),
   
   // Settings Live Inputs
+  fbAppIdInput: document.getElementById('fb-app-id'),
   btnFbLogin: document.getElementById('btn-fb-login'),
   btnFbLogout: document.getElementById('btn-fb-logout'),
   authStatusContainer: document.getElementById('auth-status-container'),
@@ -261,8 +266,10 @@ async function handleFBLogin() {
   setLoading(true, "Connecting Facebook SDK...");
   
   try {
+    const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
+
     // 1. Initialize SDK
-    await initFacebookSDK(SYSTEM_FB_APP_ID);
+    await initFacebookSDK(activeAppId);
 
     // 2. Perform Login Flow
     setLoading(true, "Launching Meta Auth window...");
@@ -361,6 +368,35 @@ function bindEvents() {
     DOM.btnFbLogout.addEventListener('click', handleFBLogout);
   }
 
+  // 3. Custom App ID inputs listeners
+  if (DOM.fbAppIdInput) {
+    DOM.fbAppIdInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      state.appId = val;
+      localStorage.setItem('meta_ads_app_id', val);
+      if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = val;
+    });
+  }
+
+  if (DOM.gateFbAppIdInput) {
+    DOM.gateFbAppIdInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      state.appId = val;
+      localStorage.setItem('meta_ads_app_id', val);
+      if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = val;
+    });
+  }
+
+  // 4. Toggle Advanced Accordion
+  if (DOM.btnToggleAdvancedGate) {
+    DOM.btnToggleAdvancedGate.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (DOM.advancedGateFields) {
+        DOM.advancedGateFields.classList.toggle('hidden');
+      }
+    });
+  }
+
   // 4. Form selectors triggers
   DOM.businessPortfolioSelect.addEventListener('change', (e) => {
     state.activeBusinessId = e.target.value;
@@ -408,9 +444,17 @@ function bindEvents() {
 async function appStartup() {
   bindEvents();
 
+  // Populate App ID fields if stored
+  if (state.appId) {
+    if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = state.appId;
+    if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = state.appId;
+    if (DOM.advancedGateFields) DOM.advancedGateFields.classList.remove('hidden');
+  }
+
   setLoading(true, "Checking Facebook auth status...");
   try {
     let tokenValid = false;
+    const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
 
     // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
     if (state.accessToken) {
@@ -426,7 +470,7 @@ async function appStartup() {
     // 2. If token is invalid/missing, fallback to Facebook SDK check
     if (!tokenValid) {
       try {
-        await initFacebookSDK(SYSTEM_FB_APP_ID);
+        await initFacebookSDK(activeAppId);
         const status = await checkLoginStatus();
         
         if (status && status.accessToken) {
