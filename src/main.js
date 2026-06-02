@@ -311,17 +311,19 @@ function triggerDashboardRefresh() {
 // --- Live Meta API Authentication Process ---
 
 async function handleFBLogin() {
-  setLoading(true, "Connecting Facebook SDK...");
+  const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
   
   try {
-    const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
-
-    // 1. Initialize SDK
-    await initFacebookSDK(activeAppId);
-
-    // 2. Perform Login Flow
-    setLoading(true, "Launching Meta Auth window...");
-    const auth = await loginWithFacebook();
+    let auth;
+    // 1. If SDK is already loaded, invoke Login Flow immediately to bypass browser popup blockers!
+    if (window.FB) {
+      auth = await loginWithFacebook();
+    } else {
+      setLoading(true, "Connecting Facebook SDK...");
+      await initFacebookSDK(activeAppId);
+      setLoading(true, "Launching Meta Auth window...");
+      auth = await loginWithFacebook();
+    }
     
     state.accessToken = auth.accessToken;
     localStorage.setItem('meta_ads_access_token', auth.accessToken);
@@ -634,10 +636,14 @@ async function appStartup() {
     if (DOM.developerPanel) DOM.developerPanel.classList.remove('hidden');
   }
 
+  const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
+  
+  // Pre-initialize Facebook SDK in the background immediately to avoid popup blockers
+  initFacebookSDK(activeAppId).catch(err => console.warn("Facebook SDK background pre-init failed:", err));
+
   setLoading(true, "Checking Facebook auth status...");
   try {
     let tokenValid = false;
-    const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
 
     // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
     if (state.accessToken) {
