@@ -221,10 +221,10 @@
               <span>Ad Sets</span>
             </a>
           </li>
-          <li data-tab="settings">
-            <a href="#settings">
+          <li data-tab="configuration">
+            <a href="#configuration">
               <i data-lucide="settings"></i>
-              <span>Setup & API</span>
+              <span>Configuration</span>
             </a>
           </li>
         </ul>
@@ -232,12 +232,17 @@
 
       <!-- Sidebar Footer / Connected Account -->
       <div class="sidebar-footer">
-        <div class="user-profile" id="user-profile">
-          <div class="user-avatar" id="user-avatar">M</div>
-          <div class="user-details">
-            <span class="user-name" id="user-name">Demo Workspace</span>
-            <span class="user-status" id="user-status">Mock Analytics Enabled</span>
+        <div class="user-profile-row" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <div class="user-profile" id="user-profile" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <div class="user-details" style="display: flex; flex-direction: column; overflow: hidden;">
+              <span class="user-name" id="user-name">Disconnected</span>
+              <span class="user-status" id="user-status">No Session</span>
+            </div>
           </div>
+          <button id="btn-sidebar-logout" class="btn btn-icon btn-xs" title="Log Out Session" style="background: rgba(239, 68, 68, 0.1); color: var(--color-rose); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-sm); padding: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='var(--color-rose)'; this.style.color='#fff'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='var(--color-rose)'">
+            <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+          </button>
         </div>
       </div>
     </aside>
@@ -558,49 +563,84 @@
         </div>
       </section>
 
-      <!-- API Configuration Panel (Settings) -->
-      <section class="tab-panel" id="panel-settings">
+      <!-- API Configuration Panel (Configuration) -->
+      <section class="tab-panel" id="panel-configuration">
         <div class="settings-grid">
           
-          <!-- Instructions Card -->
-          <div class="settings-card glass-card">
-            <h3 class="settings-card-title">
-              <i data-lucide="help-circle"></i> Secure Session Info
-            </h3>
-            <div class="settings-card-body">
-              <p class="instructions-intro">Securely connect and manage your active Meta Ads reporting session:</p>
-              <div class="alert-box note">
-                <i data-lucide="shield-check"></i>
-                <div>
-                  <strong>Direct Client-Side Connection:</strong> AdPulse queries the Meta Marketing Graph API directly from your browser. Access tokens are kept strictly in your local device memory and never transmitted to external databases.
+          <!-- Column 1: Credentials & Compliance -->
+          <div style="display: flex; flex-direction: column; gap: 32px;">
+            
+            <!-- Card 1: API Credentials Setup -->
+            <div class="settings-card glass-card">
+              <h3 class="settings-card-title">
+                <i data-lucide="key-round"></i> API Credentials Setup
+              </h3>
+              <div class="settings-card-body">
+                <div class="settings-form-group" style="margin-bottom: 20px;">
+                  <label for="config-fb-app-id" class="form-label" style="font-weight: 500; font-size: 13px; color: var(--text-main); margin-bottom: 8px; display: block;">
+                    Meta / Facebook App ID
+                  </label>
+                  <div class="input-icon-wrap" style="position: relative; display: flex; align-items: center;">
+                    <i data-lucide="key" style="position: absolute; left: 12px; color: var(--text-dim); width: 16px; height: 16px;"></i>
+                    <input type="text" id="config-fb-app-id" placeholder="Enter your Facebook App ID" value="" style="width: 100%; padding: 10px 12px 10px 38px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-body); font-size: 13px; outline: none; transition: border-color var(--transition-fast);">
+                  </div>
+                  <p class="form-help-text" style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+                    Saves automatically to browser memory.
+                  </p>
+                </div>
+
+                <div class="settings-form-group" style="margin-bottom: 20px;">
+                  <label class="form-label" style="font-weight: 500; font-size: 13px; color: var(--text-main); margin-bottom: 8px; display: block;">Facebook Auth Session</label>
+                  <div class="auth-status-container" id="auth-status-container" style="border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); padding: 16px; display: flex; align-items: center; gap: 16px;">
+                    <div class="auth-status-icon logged-out" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); color: var(--color-rose);">
+                      <i data-lucide="user-x"></i>
+                    </div>
+                    <div class="auth-status-details" style="display: flex; flex-direction: column;">
+                      <span class="auth-status-title" id="auth-status-title" style="font-weight: 600; font-size: 14px; color: var(--text-main);">Disconnected</span>
+                      <span class="auth-status-description" id="auth-status-desc" style="font-size: 11px; color: var(--text-dim);">Provide your App ID and click log in.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-actions" style="display: flex; gap: 12px; margin-top: 24px;">
+                  <button class="btn btn-primary" id="btn-fb-login" style="padding: 10px 16px; font-size: 13px;">
+                    <i data-lucide="facebook"></i>
+                    <span>Login with Facebook</span>
+                  </button>
+                  <button class="btn btn-secondary hidden" id="btn-fb-logout" style="padding: 10px 16px; font-size: 13px;">
+                    <i data-lucide="log-out"></i>
+                    <span>Log Out Session</span>
+                  </button>
                 </div>
               </div>
-              <div class="alert-box success">
-                <i data-lucide="info"></i>
-                <div>
-                  <strong>Verification details:</strong> This setup communicates through your custom App ID. All linked ad accounts, business managers, campaigns, and ad sets are loaded automatically.
-                </div>
-              </div>
-              <div class="mt-4 pt-4" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed rgba(255, 255, 255, 0.15);">
-                <h4 class="text-sm font-semibold mb-2" style="color: #fff; font-size: 13px; margin-bottom: 8px;">Meta Verification Assets</h4>
-                <p class="text-xs text-dim mb-3" style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Use these compliant URLs in your Meta Developer console (Settings > Basic) to transition your app to Live mode:</p>
+            </div>
+
+            <!-- Card 2: Meta Verification Assets -->
+            <div class="settings-card glass-card">
+              <h3 class="settings-card-title">
+                <i data-lucide="shield"></i> Meta Verification Assets
+              </h3>
+              <div class="settings-card-body">
+                <p class="instructions-intro" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+                  Meta requires these compliant URLs inside your App Settings (**Settings > Basic**) to approve and switch your App ID to **Live mode** so public users can log in:
+                </p>
                 
-                <div class="copy-url-group" style="margin-bottom: 12px;">
-                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Privacy Policy URL</span>
-                  <div class="redirect-uri-copy-box" style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
-                    <span class="uri-text" id="settings-privacy-url" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://your-domain.com/privacy.html</span>
-                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-settings-privacy" data-copy="https://your-domain.com/privacy.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                <div class="copy-url-group" style="margin-bottom: 16px;">
+                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 6px;">Privacy Policy URL</span>
+                  <div class="redirect-uri-copy-box" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
+                    <span class="uri-text" id="config-privacy-url" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://your-domain.com/privacy.html</span>
+                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-config-privacy" data-copy="https://your-domain.com/privacy.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
                       <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
                       <span>Copy</span>
                     </button>
                   </div>
                 </div>
 
-                <div class="copy-url-group" style="margin-bottom: 12px;">
-                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Terms of Service URL</span>
-                  <div class="redirect-uri-copy-box" style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
-                    <span class="uri-text" id="settings-terms-url" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://your-domain.com/terms.html</span>
-                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-settings-terms" data-copy="https://your-domain.com/terms.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                <div class="copy-url-group" style="margin-bottom: 16px;">
+                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 6px;">Terms of Service URL</span>
+                  <div class="redirect-uri-copy-box" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
+                    <span class="uri-text" id="config-terms-url" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://your-domain.com/terms.html</span>
+                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-config-terms" data-copy="https://your-domain.com/terms.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
                       <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
                       <span>Copy</span>
                     </button>
@@ -608,10 +648,10 @@
                 </div>
 
                 <div class="copy-url-group">
-                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">App Domain</span>
-                  <div class="redirect-uri-copy-box" style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
-                    <span class="uri-text" id="settings-app-domain" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">your-domain.com</span>
-                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-settings-domain" data-copy="your-domain.com" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                  <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 6px;">App Domain</span>
+                  <div class="redirect-uri-copy-box" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
+                    <span class="uri-text" id="config-app-domain" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">your-domain.com</span>
+                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-config-domain" data-copy="your-domain.com" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
                       <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
                       <span>Copy</span>
                     </button>
@@ -619,49 +659,154 @@
                 </div>
               </div>
             </div>
+
           </div>
 
-          <!-- Credentials Input Panel -->
+          <!-- Column 2: Step-by-Step Meta Setup Guide -->
           <div class="settings-card glass-card">
             <h3 class="settings-card-title">
-              <i data-lucide="key-round"></i> API Credentials Setup
+              <i data-lucide="help-circle"></i> Meta Developer Setup Guide
             </h3>
-            <div class="settings-card-body">
-              <div class="settings-form-group" style="margin-bottom: 20px;">
-                <label for="settings-fb-app-id" class="form-label" style="font-weight: 500; font-size: 13px; color: var(--text-main); margin-bottom: 8px; display: block;">
-                  Meta / Facebook App ID
-                </label>
-                <div class="input-icon-wrap" style="position: relative; display: flex; align-items: center;">
-                  <i data-lucide="key" style="position: absolute; left: 12px; color: var(--text-dim); width: 16px; height: 16px;"></i>
-                  <input type="text" id="settings-fb-app-id" placeholder="Enter your Facebook App ID" value="" style="width: 100%; padding: 10px 12px 10px 38px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-body); font-size: 13px; outline: none; transition: border-color var(--transition-fast);">
-                </div>
-                <p class="form-help-text" style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
-                  Saves automatically to browser memory.
-                </p>
-              </div>
-
-              <div class="settings-form-group">
-                <label class="form-label">Facebook Auth Session</label>
-                <div class="auth-status-container" id="auth-status-container">
-                  <div class="auth-status-icon logged-out">
-                    <i data-lucide="user-x"></i>
+            <div class="settings-card-body" style="display: flex; flex-direction: column; gap: 16px;">
+              <p class="instructions-intro" style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 8px;">
+                AdPulse executes API queries completely on the client-side. To connect your campaigns, you must register a <strong>Meta Developer Application</strong> in your Facebook Developer Dashboard. Follow our interactive checklist below:
+              </p>
+              
+              <!-- Accordion Container -->
+              <div class="setup-accordion" id="setup-accordion">
+                
+                <!-- Accordion Item 1 -->
+                <div class="accordion-item active" data-step="1">
+                  <div class="accordion-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span class="step-badge" style="width: 24px; height: 24px; border-radius: 50%; background: var(--color-indigo); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transition: all 0.2s;">1</span>
+                      <span style="font-size: 13.5px; font-weight: 600; color: #fff;">Register as a Meta Developer</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="accordion-arrow" style="width: 16px; height: 16px; color: var(--text-dim); transition: transform 0.2s; transform: rotate(180deg);"></i>
                   </div>
-                  <div class="auth-status-details">
-                    <span class="auth-status-title" id="auth-status-title">Disconnected</span>
-                    <span class="auth-status-description" id="auth-status-desc">Provide your App ID and click log in.</span>
+                  <div class="accordion-content" style="padding: 16px; border: 1px solid var(--border-color); border-top: none; background: rgba(255,255,255,0.01); border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);">
+                    <p style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 12px;">
+                      To integrate your app with Facebook services, you must register as a Meta Developer:
+                    </p>
+                    <ol class="step-ol-list" style="margin-left: 20px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                      <li>Navigate to <a href="https://developers.facebook.com/" target="_blank" rel="noopener" style="color: var(--color-indigo); font-weight: 500; text-decoration: underline;">developers.facebook.com</a>.</li>
+                      <li>Click <strong>Get Started</strong> or <strong>Log In</strong> in the top right-hand corner.</li>
+                      <li>Log in with your standard Facebook credentials.</li>
+                      <li>Follow the registration onboarding wizard: agree to terms, verify your mobile number, and select your developer profile as <strong>Marketer</strong> or <strong>Developer</strong>.</li>
+                    </ol>
                   </div>
                 </div>
-              </div>
 
-              <div class="settings-actions">
-                <button class="btn btn-primary" id="btn-fb-login">
-                  <i data-lucide="facebook"></i>
-                  <span>Login with Facebook</span>
-                </button>
-                <button class="btn btn-secondary hidden" id="btn-fb-logout">
-                  <i data-lucide="log-out"></i>
-                  <span>Log Out Session</span>
-                </button>
+                <!-- Accordion Item 2 -->
+                <div class="accordion-item" data-step="2">
+                  <div class="accordion-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span class="step-badge" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transition: all 0.2s;">2</span>
+                      <span style="font-size: 13.5px; font-weight: 600; color: #fff;">Create a Meta Application</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="accordion-arrow" style="width: 16px; height: 16px; color: var(--text-dim); transition: transform 0.2s;"></i>
+                  </div>
+                  <div class="accordion-content hidden" style="padding: 16px; border: 1px solid var(--border-color); border-top: none; background: rgba(255,255,255,0.01); border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);">
+                    <p style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 12px;">
+                      Every API integration requires a unique Application ID (App ID):
+                    </p>
+                    <ol class="step-ol-list" style="margin-left: 20px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                      <li>Inside your <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener" style="color: var(--color-indigo); font-weight: 500; text-decoration: underline;">Meta App Dashboard</a>, click <strong>Create App</strong> (green button).</li>
+                      <li><strong>Select App Use Cases</strong>: Choose <strong>Other</strong> or <strong>Business</strong> (choose <strong>Other</strong> for maximum flexibility). Click Next.</li>
+                      <li><strong>Select App Type</strong>: Choose <strong>Business</strong> <span style="color: var(--color-rose); font-weight: 500;">(CRITICAL)</span> as this unlocks Business Portfolios and the Marketing API. Click Next.</li>
+                      <li><strong>App Details</strong>: Enter a display name (e.g. <code>AdPulse Analytics</code>), confirm your contact email, and select your Business Manager account (optional).</li>
+                      <li>Click <strong>Create App</strong> and enter your password to confirm.</li>
+                    </ol>
+                  </div>
+                </div>
+
+                <!-- Accordion Item 3 -->
+                <div class="accordion-item" data-step="3">
+                  <div class="accordion-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span class="step-badge" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transition: all 0.2s;">3</span>
+                      <span style="font-size: 13.5px; font-weight: 600; color: #fff;">Add Login & Marketing API Products</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="accordion-arrow" style="width: 16px; height: 16px; color: var(--text-dim); transition: transform 0.2s;"></i>
+                  </div>
+                  <div class="accordion-content hidden" style="padding: 16px; border: 1px solid var(--border-color); border-top: none; background: rgba(255,255,255,0.01); border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);">
+                    <p style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 12px;">
+                      Your newly created app needs credentials to connect to Facebook's OAuth and Marketing endpoints:
+                    </p>
+                    <ol class="step-ol-list" style="margin-left: 20px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                      <li>Scroll down the App Dashboard to the **Add products to your app** section.</li>
+                      <li>Find **Facebook Login** (or *Facebook Login for Business*) and click **Set Up**.</li>
+                      <li>Find the **Marketing API** product card and click **Set Up** <span style="color: var(--color-indigo); font-weight: 500;">(CRITICAL)</span>. This initializes SDK endpoints for campaign analytics under your App ID.</li>
+                    </ol>
+                  </div>
+                </div>
+
+                <!-- Accordion Item 4 -->
+                <div class="accordion-item" data-step="4">
+                  <div class="accordion-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span class="step-badge" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transition: all 0.2s;">4</span>
+                      <span style="font-size: 13.5px; font-weight: 600; color: #fff;">Configure OAuth Redirect URIs & SDK</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="accordion-arrow" style="width: 16px; height: 16px; color: var(--text-dim); transition: transform 0.2s;"></i>
+                  </div>
+                  <div class="accordion-content hidden" style="padding: 16px; border: 1px solid var(--border-color); border-top: none; background: rgba(255,255,255,0.01); border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);">
+                    <p style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 12px;">
+                      To ensure secure logins, you must authorize this domain to receive Facebook's security tokens:
+                    </p>
+                    <ol class="step-ol-list" style="margin-left: 20px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                      <li>In the left-hand menu, expand **Facebook Login** and click **Settings**.</li>
+                      <li>Scroll to **Client OAuth Settings** and find **Valid OAuth Redirect URIs**.</li>
+                      <li>Copy the URL below and paste it in that field, then hit Enter:</li>
+                      
+                      <!-- URI Copy Box -->
+                      <div class="redirect-uri-copy-box" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px; margin: 4px 0 8px 0;">
+                        <span class="uri-text" id="config-guide-redirect-url" style="font-family: monospace; font-size: 11.5px; color: var(--text-main); word-break: break-all;">http://localhost:3000</span>
+                        <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-config-guide-redirect" data-copy="http://localhost:3000" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                          <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
+                          <span>Copy URL</span>
+                        </button>
+                      </div>
+
+                      <li>Ensure the toggle **Login with JavaScript SDK** is set to <strong style="color: var(--color-emerald)">YES</strong>.</li>
+                      <li>Add the same URL into the **Allowed Domains for the JavaScript SDK** list.</li>
+                      <li>Click **Save Changes** at the bottom.</li>
+                    </ol>
+                  </div>
+                </div>
+
+                <!-- Accordion Item 5 -->
+                <div class="accordion-item" data-step="5">
+                  <div class="accordion-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span class="step-badge" style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.05); color: var(--text-dim); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; transition: all 0.2s;">5</span>
+                      <span style="font-size: 13.5px; font-weight: 600; color: #fff;">Configure App Review & Go Live</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="accordion-arrow" style="width: 16px; height: 16px; color: var(--text-dim); transition: transform 0.2s;"></i>
+                  </div>
+                  <div class="accordion-content hidden" style="padding: 16px; border: 1px solid var(--border-color); border-top: none; background: rgba(255,255,255,0.01); border-bottom-left-radius: var(--radius-sm); border-bottom-right-radius: var(--radius-sm);">
+                    <p style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 8px;">
+                      While your app is in **Development Mode**, only accounts explicitly listed as project Testers can connect.
+                    </p>
+                    
+                    <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 12px;">
+                      <span style="display: block; font-size: 11.5px; font-weight: 600; color: var(--color-indigo); margin-bottom: 4px;">🚀 Sandbox/Developer Testing Quick Shortcut:</span>
+                      <p style="font-size: 11px; color: var(--text-dim); line-height: 1.5; margin: 0;">
+                        To test quickly, click **App Roles > Roles** in your sidebar. Click **Add Testers**, and add the test Facebook profile username. <em>Crucial:</em> The tester must accept the invitation on <a href="https://developers.facebook.com/" target="_blank" rel="noopener" style="color: var(--color-indigo); text-decoration: underline;">developers.facebook.com</a> notifications to authorize!
+                      </p>
+                    </div>
+
+                    <p style="font-size: 12.5px; color: var(--text-dim); line-height: 1.6; margin-bottom: 8px;">
+                      To launch the app for <strong>all external users publicly</strong>:
+                    </p>
+                    <ol class="step-ol-list" style="margin-left: 20px; font-size: 12.5px; color: var(--text-dim); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+                      <li>Paste the compliance assets from the left panel (**Privacy Policy URL**, **Terms of Service URL**, **App Domain**) into the fields under **Settings > Basic**.</li>
+                      <li>Go to **App Review > Permissions and Features**, locate `ads_read` and `business_management`, request **Advanced Access** (requires standard form explanation).</li>
+                      <li>Finally, toggle your App Mode from <strong style="color: var(--color-rose)">Development</strong> to <strong style="color: var(--color-emerald)">Live</strong> at the top of your dashboard!</li>
+                    </ol>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

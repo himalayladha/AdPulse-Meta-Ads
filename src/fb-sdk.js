@@ -113,10 +113,37 @@ export function logoutFacebook() {
       return;
     }
     
-    window.FB.logout(() => {
-      console.log("Facebook User logged out successfully.");
+    // Set a global safety timeout at the very top to prevent hanging
+    const globalTimeout = setTimeout(() => {
+      console.warn("Facebook logout operation timed out. Forcing local logout.");
       resolve();
-    });
+    }, 1500);
+
+    try {
+      window.FB.getLoginStatus((response) => {
+        if (response && response.status === 'connected') {
+          try {
+            window.FB.logout(() => {
+              clearTimeout(globalTimeout);
+              console.log("Facebook User logged out successfully.");
+              resolve();
+            });
+          } catch (err) {
+            clearTimeout(globalTimeout);
+            console.warn("FB.logout threw error:", err);
+            resolve();
+          }
+        } else {
+          clearTimeout(globalTimeout);
+          console.log("User not connected to Facebook. Resolving logout immediately.");
+          resolve();
+        }
+      });
+    } catch (err) {
+      clearTimeout(globalTimeout);
+      console.warn("FB.getLoginStatus check failed during logout:", err);
+      resolve();
+    }
   });
 }
 

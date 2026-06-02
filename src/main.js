@@ -54,10 +54,11 @@ const DOM = {
   helpRedirectUri: document.getElementById('help-redirect-uri'),
   btnCopyRedirect: document.getElementById('btn-copy-redirect'),
   
-  // Settings Live Inputs
-  settingsFbAppIdInput: document.getElementById('settings-fb-app-id'),
+  // Configuration Live Inputs
+  configFbAppIdInput: document.getElementById('config-fb-app-id'),
   btnFbLogin: document.getElementById('btn-fb-login'),
   btnFbLogout: document.getElementById('btn-fb-logout'),
+  btnSidebarLogout: document.getElementById('btn-sidebar-logout'),
   authStatusContainer: document.getElementById('auth-status-container'),
   authStatusIcon: document.querySelector('.auth-status-icon'),
   authStatusTitle: document.getElementById('auth-status-title'),
@@ -131,9 +132,9 @@ function switchTab(tabId) {
       DOM.pageTitle.innerText = "Ad Sets Delivery";
       DOM.pageSubtitle.innerText = "Granular audience splits and bid strategies.";
       break;
-    case 'settings':
-      DOM.pageTitle.innerText = "System Configuration";
-      DOM.pageSubtitle.innerText = "Setup your Developer App Credentials to sync live accounts.";
+    case 'configuration':
+      DOM.pageTitle.innerText = "Application Configuration";
+      DOM.pageSubtitle.innerText = "Configure your Meta App ID, manage active login sessions, and view verification setups.";
       break;
   }
 }
@@ -268,6 +269,7 @@ async function handleFBLogin() {
     
     state.accessToken = auth.accessToken;
     localStorage.setItem('meta_ads_access_token', auth.accessToken);
+    localStorage.setItem('meta_ads_session_active', 'true');
 
     // 3. Update Auth session state container
     DOM.authStatusContainer.innerHTML = `
@@ -310,9 +312,24 @@ async function handleFBLogout() {
     console.warn("FB SDK session end warning:", err);
   }
 
-  // Clear credentials
+  // Clear credentials & state caches completely to prevent leaks or ghost visuals
   state.accessToken = '';
+  state.activeAdAccountId = '';
+  state.activeAdAccountName = '';
+  state.activeDataset = null;
+  state.adAccounts = [];
+  
   localStorage.removeItem('meta_ads_access_token');
+  localStorage.removeItem('meta_ads_active_ad_account_id');
+  localStorage.setItem('meta_ads_session_active', 'false');
+
+  // Reset sidebar profile details
+  if (DOM.userAvatar) {
+    DOM.userAvatar.innerText = 'U';
+    DOM.userAvatar.style.backgroundImage = 'none';
+  }
+  if (DOM.userName) DOM.userName.innerText = 'Disconnected';
+  if (DOM.userStatus) DOM.userStatus.innerText = 'No Session';
   
   DOM.authStatusContainer.innerHTML = `
     <div class="auth-status-icon logged-out">
@@ -391,13 +408,16 @@ function bindEvents() {
   if (DOM.btnFbLogout) {
     DOM.btnFbLogout.addEventListener('click', handleFBLogout);
   }
+  if (DOM.btnSidebarLogout) {
+    DOM.btnSidebarLogout.addEventListener('click', handleFBLogout);
+  }
 
   // 3. Custom App ID inputs listeners
   const syncAppId = (val) => {
     state.appId = val;
     localStorage.setItem('meta_ads_app_id', val);
     if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = val;
-    if (DOM.settingsFbAppIdInput) DOM.settingsFbAppIdInput.value = val;
+    if (DOM.configFbAppIdInput) DOM.configFbAppIdInput.value = val;
   };
 
   if (DOM.gateFbAppIdInput) {
@@ -406,8 +426,8 @@ function bindEvents() {
     });
   }
 
-  if (DOM.settingsFbAppIdInput) {
-    DOM.settingsFbAppIdInput.addEventListener('input', (e) => {
+  if (DOM.configFbAppIdInput) {
+    DOM.configFbAppIdInput.addEventListener('input', (e) => {
       syncAppId(e.target.value.trim());
     });
   }
@@ -528,6 +548,45 @@ function bindEvents() {
   
   // Set up sorting columns logic
   bindTableSorters(state.activeDataset, triggerDashboardRefresh);
+
+  // 7. Interactive Accordion Setup Guide Logic
+  const accordionItems = document.querySelectorAll('.setup-accordion .accordion-item');
+  accordionItems.forEach(item => {
+    const header = item.querySelector('.accordion-header');
+    if (header) {
+      header.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+        
+        // Collapse all items
+        accordionItems.forEach(otherItem => {
+          otherItem.classList.remove('active');
+          const content = otherItem.querySelector('.accordion-content');
+          if (content) content.classList.add('hidden');
+          const arrow = otherItem.querySelector('.accordion-arrow');
+          if (arrow) arrow.style.transform = 'rotate(0deg)';
+          const badge = otherItem.querySelector('.step-badge');
+          if (badge) {
+            badge.style.background = 'rgba(255, 255, 255, 0.05)';
+            badge.style.color = 'var(--text-dim)';
+          }
+        });
+
+        // Expand clicked item if it wasn't active
+        if (!isActive) {
+          item.classList.add('active');
+          const content = item.querySelector('.accordion-content');
+          if (content) content.classList.remove('hidden');
+          const arrow = item.querySelector('.accordion-arrow');
+          if (arrow) arrow.style.transform = 'rotate(180deg)';
+          const badge = item.querySelector('.step-badge');
+          if (badge) {
+            badge.style.background = 'var(--color-indigo)';
+            badge.style.color = '#fff';
+          }
+        }
+      });
+    }
+  });
 }
 
 /**
@@ -539,20 +598,23 @@ async function appStartup() {
   // Populate App ID fields if stored
   if (state.appId) {
     if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = state.appId;
-    if (DOM.settingsFbAppIdInput) DOM.settingsFbAppIdInput.value = state.appId;
+    if (DOM.configFbAppIdInput) DOM.configFbAppIdInput.value = state.appId;
   }
 
   // Dynamically populate settings metadata verification URLs based on active host
   const privacyUrl = `${window.location.origin}/privacy.html`;
   const termsUrl = `${window.location.origin}/terms.html`;
   const appDomain = window.location.hostname;
+  const redirectUri = window.location.origin;
 
-  const txtPrivacy = document.getElementById('settings-privacy-url');
-  const btnPrivacy = document.getElementById('btn-copy-settings-privacy');
-  const txtTerms = document.getElementById('settings-terms-url');
-  const btnTerms = document.getElementById('btn-copy-settings-terms');
-  const txtDomain = document.getElementById('settings-app-domain');
-  const btnDomain = document.getElementById('btn-copy-settings-domain');
+  const txtPrivacy = document.getElementById('config-privacy-url');
+  const btnPrivacy = document.getElementById('btn-copy-config-privacy');
+  const txtTerms = document.getElementById('config-terms-url');
+  const btnTerms = document.getElementById('btn-copy-config-terms');
+  const txtDomain = document.getElementById('config-app-domain');
+  const btnDomain = document.getElementById('btn-copy-config-domain');
+  const txtGuideRedirect = document.getElementById('config-guide-redirect-url');
+  const btnGuideRedirect = document.getElementById('btn-copy-config-guide-redirect');
 
   if (txtPrivacy) txtPrivacy.innerText = privacyUrl;
   if (btnPrivacy) btnPrivacy.setAttribute('data-copy', privacyUrl);
@@ -560,6 +622,8 @@ async function appStartup() {
   if (btnTerms) btnTerms.setAttribute('data-copy', termsUrl);
   if (txtDomain) txtDomain.innerText = appDomain;
   if (btnDomain) btnDomain.setAttribute('data-copy', appDomain);
+  if (txtGuideRedirect) txtGuideRedirect.innerText = redirectUri;
+  if (btnGuideRedirect) btnGuideRedirect.setAttribute('data-copy', redirectUri);
 
   const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
   
@@ -571,36 +635,39 @@ async function appStartup() {
   setLoading(true, "Checking Facebook auth status...");
   try {
     let tokenValid = false;
+    const sessionActive = localStorage.getItem('meta_ads_session_active') === 'true';
 
-    // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
-    if (state.accessToken) {
-      if (state.accessToken === 'demo_mode_token') {
-        localStorage.removeItem('meta_ads_access_token');
-        state.accessToken = '';
-      } else {
-        try {
-          await fetchUserProfile(state.accessToken);
-          tokenValid = true;
-          console.log("Meta API access token verified successfully!");
-        } catch (err) {
-          console.warn("Cached access token invalid, checking Facebook SDK status...", err);
+    if (sessionActive) {
+      // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
+      if (state.accessToken) {
+        if (state.accessToken === 'demo_mode_token') {
+          localStorage.removeItem('meta_ads_access_token');
+          state.accessToken = '';
+        } else {
+          try {
+            await fetchUserProfile(state.accessToken);
+            tokenValid = true;
+            console.log("Meta API access token verified successfully!");
+          } catch (err) {
+            console.warn("Cached access token invalid, checking Facebook SDK status...", err);
+          }
         }
       }
-    }
 
-    // 2. If token is invalid/missing, fallback to Facebook SDK check
-    if (!tokenValid) {
-      try {
-        await initFacebookSDK(activeAppId);
-        const status = await checkLoginStatus();
-        
-        if (status && status.accessToken) {
-          state.accessToken = status.accessToken;
-          localStorage.setItem('meta_ads_access_token', status.accessToken);
-          tokenValid = true;
+      // 2. If token is invalid/missing, fallback to Facebook SDK check
+      if (!tokenValid) {
+        try {
+          await initFacebookSDK(activeAppId);
+          const status = await checkLoginStatus();
+          
+          if (status && status.accessToken) {
+            state.accessToken = status.accessToken;
+            localStorage.setItem('meta_ads_access_token', status.accessToken);
+            tokenValid = true;
+          }
+        } catch (sdkErr) {
+          console.warn("Facebook SDK status retrieval failed:", sdkErr);
         }
-      } catch (sdkErr) {
-        console.warn("Facebook SDK status retrieval failed:", sdkErr);
       }
     }
     
@@ -626,6 +693,7 @@ async function appStartup() {
     } else {
       // No active session or expired
       localStorage.removeItem('meta_ads_access_token');
+      localStorage.removeItem('meta_ads_session_active');
       state.accessToken = '';
       
       // Ensure gate is visible and app is hidden

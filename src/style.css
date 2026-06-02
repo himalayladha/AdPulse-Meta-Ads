@@ -1886,3 +1886,63 @@ a:hover {
   align-items: center;
   gap: 12px;
 }
+
+/* Setup Accordion Premium Styles */
+.setup-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.accordion-item {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.accordion-header {
+  border: 1px solid var(--border-color) !important;
+}
+
+.accordion-item.active {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.1);
+}
+
+.accordion-header:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.accordion-item.active .accordion-header {
+  background: rgba(99, 102, 241, 0.04) !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+.accordion-content {
+  transition: all 0.3s ease-in-out;
+}
+
+.accordion-content.hidden {
+  display: none;
+}
+
+.accordion-arrow {
+  transition: transform 0.25s ease;
+}
+
+.step-badge {
+  transition: all 0.25s ease;
+}
+
+/* Sidebar profile quick logout styling */
+#btn-sidebar-logout:hover {
+  background: var(--color-rose) !important;
+  color: #fff !important;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+#btn-sidebar-logout:active {
+  transform: translateY(0);
+}
