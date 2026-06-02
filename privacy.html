@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy - AdPulse Analytics</title>
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/src/style.css">
+  <style>
+    body {
+      background-color: var(--bg-app);
+      background-image: radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.15) 0%, rgba(7, 10, 19, 0) 60%);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      padding: 40px 24px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .policy-container {
+      max-width: 700px;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      box-shadow: var(--glass-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      margin-top: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+    p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+    ul, ol {
+      padding-left: 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-indigo);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      margin-bottom: 16px;
+      transition: color var(--transition-fast);
+    }
+    .back-btn:hover {
+      color: #818cf8;
+    }
+  </style>
+</head>
+<body>
+  <div class="policy-container">
+    <div>
+      <a href="/" class="back-btn">← Back to Dashboard</a>
+      <h1>Privacy Policy</h1>
+      <p>Last updated: June 2, 2026</p>
+    </div>
+
+    <p>AdPulse Analytics ("we", "our", or "us") provides a client-side reporting dashboard to help marketers visualize their Meta (Facebook) Ads data. We value your privacy and are committed to protecting it. This Privacy Policy details how we handle information in connection with our web application.</p>
+
+    <h2>1. 100% Client-Side Architecture</h2>
+    <p>AdPulse Analytics runs completely within your web browser. <strong>We do not host or operate backend database servers that collect, store, or process your tokens, credentials, or advertising data.</strong> All authentication flows and API queries are executed directly from your local browser session to Meta's secure Graph API endpoints.</p>
+
+    <h2>2. Data Collection and Usage</h2>
+    <p>Because the app is client-side, we do not store your data on external databases. The types of data that are temporarily cached in your browser's local memory (<code>localStorage</code>) to make the dashboard function include:</p>
+    <ul>
+      <li><strong>User Access Tokens:</strong> Issued by Facebook to authenticate requests to the Meta Marketing API.</li>
+      <li><strong>App Configuration Settings:</strong> Stored settings like the selected Facebook App ID (if custom), active Ad Account IDs, selected Portfolio, and date presets.</li>
+      <li><strong>Cached Telemetry Metrics:</strong> Ad spend, CTR, CPC, impressions, clicks, conversions, campaigns status, and related analytics data are loaded directly into browser memory (RAM) to render graphs and lists.</li>
+    </ul>
+
+    <h2>3. Direct API Communications</h2>
+    <p>All data queries are routed directly through your browser to:
+      <code>https://graph.facebook.com/v18.0/*</code>
+      Your tokens and marketing insights never touch any servers other than Meta's secure endpoints.
+    </p>
+
+    <h2>4. Data Deletion and Revocation Instructions</h2>
+    <p>You have full, autonomous control over your authorization settings. You can delete or revoke data immediately at any time:</p>
+    <ol>
+      <li><strong>Clear Local Dashboard Session:</strong> Go to the <strong>Setup & API</strong> (or Settings) tab inside the dashboard and click <strong>Log Out Session</strong>. This instantly deletes all access tokens and cached parameters from your browser's local memory.</li>
+      <li><strong>Delete Browser Cache:</strong> Clear your browser cookies and local storage (keys beginning with <code>meta_ads_</code>) to erase any traces of dashboard parameters.</li>
+      <li><strong>Revoke App Access on Meta:</strong> Log in to Facebook, go to **Settings & Privacy** -> **Settings** -> **Business Integrations**, locate the app display name, and click **Remove** to invalidate the OAuth token permanently.</li>
+    </ol>
+
+    <h2>5. Changes to This Privacy Policy</h2>
+    <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date at the top.</p>
+
+    <h2>6. Contact Us</h2>
+    <p>If you have any questions or suggestions regarding this Privacy Policy, please contact us at: <a href="mailto:himalayladha@gmail.com" style="color:var(--color-indigo)">himalayladha@gmail.com</a>.</p>
+  </div>
+</body>
+</html>
