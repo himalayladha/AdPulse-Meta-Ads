@@ -1550,3 +1550,90 @@ a:hover {
     flex-grow: 1;
   }
 }
+
+/* 13. Full-Page Login Gate */
+.login-gate {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-app);
+  background-image: radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.15) 0%, rgba(7, 10, 19, 0) 60%);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  transition: opacity var(--transition-normal), visibility var(--transition-normal);
+}
+
+.login-gate.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 40px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login-brand {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-brand-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--color-indigo);
+  filter: drop-shadow(0 0 8px var(--color-indigo-glow));
+  margin-bottom: 12px;
+  animation: pulse-glow 2.5s infinite ease-in-out;
+}
+
+.login-brand h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 2px;
+}
+
+.login-intro {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+#btn-gate-fb-login {
+  padding: 14px 20px;
+  font-size: 14px;
+  margin-top: 4px;
+}

@@ -21,8 +21,50 @@
   <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
+  <!-- Full-Page Authentication Gate -->
+  <div class="login-gate" id="login-gate">
+    <div class="login-card glass-card">
+      <div class="login-brand">
+        <i data-lucide="activity" class="login-brand-icon"></i>
+        <h2>AdPulse Analytics</h2>
+        <span class="brand-tag">Meta Ads Reporting Tool</span>
+      </div>
+      
+      <p class="login-intro">
+        Real-time analytics and reporting for your Meta advertising campaigns. Authenticate to sync and visualize your active ad accounts, campaigns, and placements.
+      </p>
+
+      <div class="alert-box note">
+        <i data-lucide="shield-check"></i>
+        <div>
+          <strong>Secure client-side session:</strong> All connection tokens remain inside your browser's local memory. We never send your credentials to any third-party backend servers.
+        </div>
+      </div>
+
+      <div class="login-form">
+        <div class="settings-form-group">
+          <label for="gate-fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
+          <div class="input-icon-wrap">
+            <i data-lucide="globe"></i>
+            <input type="text" id="gate-fb-app-id" placeholder="Leave blank to use default App ID" value="">
+          </div>
+          <p class="form-help-text">Enter a developer application App ID, or leave blank to use the built-in default app ID.</p>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" id="btn-gate-fb-login">
+          <i data-lucide="facebook"></i>
+          <span>Login with Facebook</span>
+        </button>
+      </div>
+
+      <div class="login-footer">
+        <span>Requires an active Meta / Facebook Advertising Account</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Global App Wrapper -->
-  <div class="app-container">
+  <div class="app-container hidden">
     
     <!-- Sidebar Navigation -->
     <aside class="app-sidebar" id="sidebar">
@@ -32,18 +74,6 @@
           <span>AdPulse</span>
         </div>
         <span class="brand-tag">Meta Ads</span>
-      </div>
-
-      <!-- Mode Switcher Card -->
-      <div class="mode-card">
-        <div class="mode-header">
-          <span class="mode-label">Reporting Mode</span>
-          <span class="mode-badge demo" id="mode-badge">DEMO</span>
-        </div>
-        <button class="mode-toggle-btn" id="toggle-mode-btn">
-          <i data-lucide="database" class="btn-icon"></i>
-          <span id="toggle-mode-txt">Go Live with Meta</span>
-        </button>
       </div>
 
       <!-- Navigation Links -->
@@ -155,23 +185,6 @@
       <!-- Dashboard View (Overview Panel) -->
       <section class="tab-panel active" id="panel-overview">
         
-        <!-- Mock Mode Quick Setup Banner -->
-        <div class="demo-setup-banner glass-card" id="demo-setup-banner">
-          <div class="banner-content">
-            <div class="banner-icon">
-              <i data-lucide="sparkles"></i>
-            </div>
-            <div class="banner-text">
-              <h3>See Your Own Meta Ads Data</h3>
-              <p>Connect your Facebook account to automatically sync your Business Portfolios, Ad Accounts, and campaign analytics instantly.</p>
-            </div>
-          </div>
-          <button class="btn btn-primary" id="btn-quick-fb-login">
-            <i data-lucide="facebook"></i>
-            <span>Connect via Facebook Login</span>
-          </button>
-        </div>
-
         <!-- KPI Summary Cards Grid -->
         <div class="kpi-grid">
           <!-- KPI 1: Spend -->
@@ -487,78 +500,38 @@
               <i data-lucide="key-round"></i> API Credentials Setup
             </h3>
             <div class="settings-card-body">
-              
-              <!-- Mode selector switch inside settings -->
-              <div class="settings-form-row mode-selector-row">
-                <span class="form-row-label">Reporting Context</span>
-                <div class="segmented-control">
-                  <button class="segment-btn active" id="segment-mock-btn">Mock Demo Mode</button>
-                  <button class="segment-btn" id="segment-live-btn">Live Meta API Mode</button>
+              <div class="settings-form-group">
+                <label for="fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
+                <div class="input-icon-wrap">
+                  <i data-lucide="globe"></i>
+                  <input type="text" id="fb-app-id" placeholder="Leave blank to use default App ID" value="">
+                </div>
+                <p class="form-help-text">Enter a custom Developer App ID, or leave blank to use the built-in system App ID.</p>
+              </div>
+
+              <div class="settings-form-group">
+                <label class="form-label">Facebook Auth Session</label>
+                <div class="auth-status-container" id="auth-status-container">
+                  <div class="auth-status-icon logged-out">
+                    <i data-lucide="user-x"></i>
+                  </div>
+                  <div class="auth-status-details">
+                    <span class="auth-status-title" id="auth-status-title">Disconnected</span>
+                    <span class="auth-status-description" id="auth-status-desc">Provide your App ID and log in to establish a session.</span>
+                  </div>
                 </div>
               </div>
 
-              <div id="live-setup-form" class="hidden-fade">
-                <div class="settings-form-group">
-                  <label for="fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
-                  <div class="input-icon-wrap">
-                    <i data-lucide="globe"></i>
-                    <input type="text" id="fb-app-id" placeholder="Leave blank to use default App ID" value="">
-                  </div>
-                  <p class="form-help-text">Enter a custom Developer App ID, or leave blank to use the built-in system App ID.</p>
-                </div>
-
-                <div class="settings-form-group">
-                  <label class="form-label">Facebook Auth Session</label>
-                  <div class="auth-status-container" id="auth-status-container">
-                    <div class="auth-status-icon logged-out">
-                      <i data-lucide="user-x"></i>
-                    </div>
-                    <div class="auth-status-details">
-                      <span class="auth-status-title" id="auth-status-title">Disconnected</span>
-                      <span class="auth-status-description" id="auth-status-desc">Provide your App ID and log in to establish a session.</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="settings-actions">
-                  <button class="btn btn-primary" id="btn-fb-login">
-                    <i data-lucide="facebook"></i>
-                    <span>Login with Facebook</span>
-                  </button>
-                  <button class="btn btn-secondary hidden" id="btn-fb-logout">
-                    <i data-lucide="log-out"></i>
-                    <span>Log Out Session</span>
-                  </button>
-                </div>
-              </div>
-
-              <div id="mock-info-panel" class="hidden-fade show">
-                <div class="alert-box success">
-                  <i data-lucide="check-circle2"></i>
-                  <div>
-                    <strong>Demo Mode Active:</strong> You are currently using isolated mock reporting data. High-fidelity metrics, sorting, search, filtering, and chart renders are fully active so you can evaluate the tool.
-                  </div>
-                </div>
-                <div class="mock-stats-display">
-                  <div class="mock-stat-item">
-                    <span class="mock-stat-lbl">Sample Ad Accounts</span>
-                    <span class="mock-stat-val">3 Accounts</span>
-                  </div>
-                  <div class="mock-stat-item">
-                    <span class="mock-stat-lbl">Campaign History Depth</span>
-                    <span class="mock-stat-val">90 Days</span>
-                  </div>
-                  <div class="mock-stat-item">
-                    <span class="mock-stat-lbl">Simulated Insights</span>
-                    <span class="mock-stat-val">Conversions, Spend, Platform distribution</span>
-                  </div>
-                </div>
-                <button class="btn btn-primary btn-block" id="btn-trigger-live-switch">
-                  <span>Activate Live Meta Authentication</span>
-                  <i data-lucide="chevron-right"></i>
+              <div class="settings-actions">
+                <button class="btn btn-primary" id="btn-fb-login">
+                  <i data-lucide="facebook"></i>
+                  <span>Login with Facebook</span>
+                </button>
+                <button class="btn btn-secondary hidden" id="btn-fb-logout">
+                  <i data-lucide="log-out"></i>
+                  <span>Log Out Session</span>
                 </button>
               </div>
-
             </div>
           </div>
 

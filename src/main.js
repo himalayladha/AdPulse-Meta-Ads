@@ -2,18 +2,16 @@
    ADSPULSE ANALYTICS - APPLICATION STATE MACHINE (ENTRYPOINT)
    ========================================================================== */
 
-import { mockAdAccounts, mockBusinessPortfolios, getMockAccountInsights, getMockCampaigns, getMockAdSets, getMockPlacements } from './mock-data.js';
 import { initFacebookSDK, loginWithFacebook, logoutFacebook, checkLoginStatus } from './fb-sdk.js';
 import { fetchUserProfile, fetchBusinessPortfolios, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
 import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './dashboard.js';
 
 // --- Application Core State ---
 const state = {
-  mode: 'MOCK', // 'MOCK' or 'LIVE'
   appId: localStorage.getItem('meta_ads_app_id') || '36377800718500903',
-  accessToken: localStorage.getItem('meta_ads_access_token') || 'EAIE9asGJRCcBRr2bjHINGKIb9OYeqEiDzjzAb5h46P9IZAqL5HtWyrds1dNU1LAk6geNPwUC0EzHZCjDjSOFaOaKpdMPKEeeAYZBBfcuC5E3sZBFiwZAKsge9PpkxFLR6sEUXI6FqZCk5w9gtzpt7YieY0KUkamCRy3PTM0ErbWeDTSGslmOFqhxwg7B0VNiqWfhPQ',
+  accessToken: localStorage.getItem('meta_ads_access_token') || '',
   activeBusinessId: localStorage.getItem('meta_ads_active_business_id') || 'all',
-  activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || 'act_4435760206742255',
+  activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || '',
   activeAdAccountName: '',
   activeDatePreset: 'last_30d',
   activeTab: 'overview',
@@ -35,17 +33,11 @@ const DOM = {
   adAccountSelect: document.getElementById('ad-account-select'),
   dateRangeSelect: document.getElementById('date-range-select'),
   
-  // App Mode Controls
-  modeBadge: document.getElementById('mode-badge'),
-  toggleModeBtn: document.getElementById('toggle-mode-btn'),
-  toggleModeTxt: document.getElementById('toggle-mode-txt'),
-  segmentMockBtn: document.getElementById('segment-mock-btn'),
-  segmentLiveBtn: document.getElementById('segment-live-btn'),
-  mockInfoPanel: document.getElementById('mock-info-panel'),
-  liveSetupForm: document.getElementById('live-setup-form'),
-  btnTriggerLiveSwitch: document.getElementById('btn-trigger-live-switch'),
-  btnQuickFbLogin: document.getElementById('btn-quick-fb-login'),
-  demoSetupBanner: document.getElementById('demo-setup-banner'),
+  // Login Gate & App Wrapper
+  loginGate: document.getElementById('login-gate'),
+  appContainer: document.querySelector('.app-container'),
+  gateFbAppIdInput: document.getElementById('gate-fb-app-id'),
+  btnGateFbLogin: document.getElementById('btn-gate-fb-login'),
   
   // Settings Live Inputs
   fbAppIdInput: document.getElementById('fb-app-id'),
@@ -84,25 +76,7 @@ function setLoading(active, text = "Loading reports...") {
   }
 }
 
-/**
- * Updates application context mode display styling
- */
-function updateModeUI() {
-  const isLive = state.mode === 'LIVE';
-  
-  // Update Badges & Toggles
-  if (isLive) {
-    DOM.modeBadge.className = "mode-badge live";
-    DOM.modeBadge.innerText = "LIVE API";
-    DOM.toggleModeTxt.innerText = "Switch to Demo Mode";
-    DOM.toggleModeBtn.classList.add('live-active');
-  } else {
-    DOM.modeBadge.className = "mode-badge demo";
-    DOM.modeBadge.innerText = "DEMO";
-    DOM.toggleModeTxt.innerText = "Go Live with Meta";
-    DOM.toggleModeBtn.classList.remove('live-active');
-  }
-}
+
 
 /**
  * Changes active tab view panel
@@ -158,138 +132,71 @@ async function loadMetricsData(forceFetch = false) {
   setLoading(true, "Gathering active accounts...");
   
   try {
-    if (state.mode === 'LIVE') {
-      if (!state.appId) {
-        throw new Error("No Facebook App ID configured. Set it up in the Setup & API tab first.");
-      }
-      if (!state.accessToken) {
-        throw new Error("No active Facebook login session. Authenticate in the Setup & API tab first.");
-      }
+    if (!state.appId) {
+      throw new Error("No Facebook App ID configured. Set it up in the Setup & API tab first.");
+    }
+    if (!state.accessToken) {
+      throw new Error("No active Facebook login session. Authenticate in the Setup & API tab first.");
+    }
 
-      // 1. Fetch live portfolios and ad accounts if not cached or force requested
-      if (state.businessPortfolios.length === 0 || forceFetch) {
-        setLoading(true, "Fetching Business Portfolios...");
-        state.businessPortfolios = await fetchBusinessPortfolios(state.accessToken);
-        populateBusinessPortfolioDropdown();
-      }
+    // 1. Fetch live portfolios and ad accounts if not cached or force requested
+    if (state.businessPortfolios.length === 0 || forceFetch) {
+      setLoading(true, "Fetching Business Portfolios...");
+      state.businessPortfolios = await fetchBusinessPortfolios(state.accessToken);
+      populateBusinessPortfolioDropdown();
+    }
 
-      if (state.adAccounts.length === 0 || forceFetch) {
-        setLoading(true, "Fetching authorized Meta Ad Accounts...");
-        state.adAccounts = await fetchAdAccounts(state.accessToken, state.activeBusinessId);
-        populateAdAccountDropdown();
-      }
+    if (state.adAccounts.length === 0 || forceFetch) {
+      setLoading(true, "Fetching authorized Meta Ad Accounts...");
+      state.adAccounts = await fetchAdAccounts(state.accessToken, state.activeBusinessId);
+      populateAdAccountDropdown();
+    }
 
-      if (state.adAccounts.length === 0) {
-        throw new Error("No active ad accounts found under the selected Portfolio.");
-      }
+    if (state.adAccounts.length === 0) {
+      throw new Error("No active ad accounts found under the selected Portfolio.");
+    }
 
-      // Check active selection validation
-      if (!state.activeAdAccountId || !state.adAccounts.find(acc => acc.id === state.activeAdAccountId)) {
-        state.activeAdAccountId = state.adAccounts[0].id;
-        DOM.adAccountSelect.value = state.activeAdAccountId;
-      }
+    // Check active selection validation
+    if (!state.activeAdAccountId || !state.adAccounts.find(acc => acc.id === state.activeAdAccountId)) {
+      state.activeAdAccountId = state.adAccounts[0].id;
+      DOM.adAccountSelect.value = state.activeAdAccountId;
+    }
 
-      const activeAcc = state.adAccounts.find(acc => acc.id === state.activeAdAccountId);
-      state.activeAdAccountName = activeAcc.name;
-      const currency = activeAcc.currency;
+    const activeAcc = state.adAccounts.find(acc => acc.id === state.activeAdAccountId);
+    state.activeAdAccountName = activeAcc.name;
+    const currency = activeAcc.currency;
 
-      // 2. Fetch parallel insights, campaigns, adsets, and placements from Graph API
-      setLoading(true, `Syncing Insights for ${activeAcc.name}...`);
-      
-      const [dailyInsights, campaigns, adsets, placements] = await Promise.all([
-        fetchAccountDailyInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
-        fetchCampaignsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
-        fetchAdSetsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
-        fetchPlacementsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken)
-      ]);
+    // 2. Fetch parallel insights, campaigns, adsets, and placements from Graph API
+    setLoading(true, `Syncing Insights for ${activeAcc.name}...`);
+    
+    const [dailyInsights, campaigns, adsets, placements] = await Promise.all([
+      fetchAccountDailyInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
+      fetchCampaignsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
+      fetchAdSetsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken),
+      fetchPlacementsWithInsights(state.activeAdAccountId, state.activeDatePreset, state.accessToken)
+    ]);
 
-      // Cache dataset state
-      state.activeDataset = {
-        dailyInsights,
-        campaigns,
-        adsets,
-        placements,
-        currency,
-        adAccountName: state.activeAdAccountName,
-        datePreset: state.activeDatePreset
-      };
+    // Cache dataset state
+    state.activeDataset = {
+      dailyInsights,
+      campaigns,
+      adsets,
+      placements,
+      currency,
+      adAccountName: state.activeAdAccountName,
+      datePreset: state.activeDatePreset
+    };
 
-      // Set user profile in Sidebar
-      try {
-        const user = await fetchUserProfile(state.accessToken);
-        DOM.userAvatar.innerText = user.name.charAt(0).toUpperCase();
-        DOM.userAvatar.style.backgroundImage = user.avatar ? `url(${user.avatar})` : 'none';
-        DOM.userAvatar.style.backgroundSize = 'cover';
-        DOM.userName.innerText = user.name;
-        DOM.userStatus.innerText = "Syncing Live Meta API";
-      } catch (err) {
-        console.warn("Failed to fetch user metadata, using defaults:", err);
-      }
-
-    } else {
-      // --- MOCK MODE DATA RETRIEVAL ---
-      if (state.businessPortfolios.length === 0 || forceFetch) {
-        state.businessPortfolios = mockBusinessPortfolios.map(biz => ({
-          id: biz.id,
-          name: biz.name
-        }));
-        populateBusinessPortfolioDropdown();
-      }
-
-      if (state.adAccounts.length === 0 || forceFetch) {
-        const filteredMockAccounts = mockAdAccounts.filter(acc => {
-          if (state.activeBusinessId === 'all') return true;
-          return acc.businessId === state.activeBusinessId;
-        });
-
-        state.adAccounts = filteredMockAccounts.map(acc => ({
-          id: acc.id,
-          name: acc.name,
-          currency: acc.currency,
-          timezone: acc.timezone,
-          status: acc.status
-        }));
-        populateAdAccountDropdown();
-      }
-
-      if (state.adAccounts.length === 0) {
-        DOM.adAccountSelect.innerHTML = `<option value="none" disabled selected>No accounts in this portfolio</option>`;
-        state.activeDataset = null;
-        setLoading(false);
-        return;
-      }
-
-      if (!state.activeAdAccountId || !state.adAccounts.find(acc => acc.id === state.activeAdAccountId)) {
-        state.activeAdAccountId = state.adAccounts[0].id;
-        DOM.adAccountSelect.value = state.activeAdAccountId;
-      }
-
-      const activeAcc = state.adAccounts.find(acc => acc.id === state.activeAdAccountId);
-      state.activeAdAccountName = activeAcc.name;
-      const currency = activeAcc.currency;
-
-      // Extract details from mock database
-      const dailyInsights = getMockAccountInsights(state.activeAdAccountId, state.activeDatePreset);
-      const campaigns = getMockCampaigns(state.activeAdAccountId, state.activeDatePreset);
-      const adsets = getMockAdSets(state.activeAdAccountId, state.activeDatePreset);
-      const placements = getMockPlacements(state.activeAdAccountId, state.activeDatePreset);
-
-      // Cache dataset state
-      state.activeDataset = {
-        dailyInsights,
-        campaigns,
-        adsets,
-        placements,
-        currency,
-        adAccountName: state.activeAdAccountName,
-        datePreset: state.activeDatePreset
-      };
-
-      // Set Demo user profile in Sidebar
-      DOM.userAvatar.innerText = "D";
-      DOM.userAvatar.style.backgroundImage = 'none';
-      DOM.userName.innerText = "Demo Workspace";
-      DOM.userStatus.innerText = "Mock Analytics Enabled";
+    // Set user profile in Sidebar
+    try {
+      const user = await fetchUserProfile(state.accessToken);
+      DOM.userAvatar.innerText = user.name.charAt(0).toUpperCase();
+      DOM.userAvatar.style.backgroundImage = user.avatar ? `url(${user.avatar})` : 'none';
+      DOM.userAvatar.style.backgroundSize = 'cover';
+      DOM.userName.innerText = user.name;
+      DOM.userStatus.innerText = "Syncing Live Meta API";
+    } catch (err) {
+      console.warn("Failed to fetch user metadata, using defaults:", err);
     }
 
     // Trigger dashboard updates
@@ -298,14 +205,6 @@ async function loadMetricsData(forceFetch = false) {
   } catch (error) {
     console.error("Dashboard synchronization error:", error);
     alert(`Sync Failed: ${error.message}`);
-    
-    // Fall back to Mock mode if Live fetch crashed to protect usability
-    if (state.mode === 'LIVE') {
-      alert("Encountered live API sync failure. Falling back to Demo Mode.");
-      state.mode = 'MOCK';
-      updateModeUI();
-      loadMetricsData(true);
-    }
   } finally {
     setLoading(false);
   }
@@ -362,20 +261,22 @@ function triggerDashboardRefresh() {
 // --- Live Meta API Authentication Process ---
 
 async function handleFBLogin() {
-  let customId = DOM.fbAppIdInput.value.trim();
+  let customId = state.appId ? state.appId.trim() : '';
   if (!customId) {
     // Fallback to default system App ID
     customId = '36377800718500903';
-    DOM.fbAppIdInput.value = customId;
+    state.appId = customId;
+    localStorage.setItem('meta_ads_app_id', customId);
   }
+  
+  if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = customId;
+  if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = customId;
 
   setLoading(true, "Connecting Facebook SDK...");
   
   try {
     // 1. Initialize SDK
     await initFacebookSDK(customId);
-    state.appId = customId;
-    localStorage.setItem('meta_ads_app_id', customId);
 
     // 2. Perform Login Flow
     setLoading(true, "Launching Meta Auth window...");
@@ -400,14 +301,9 @@ async function handleFBLogin() {
 
     if (window.lucide) window.lucide.createIcons();
 
-    // 4. Update mode and fetch live records
-    state.mode = 'LIVE';
-    updateModeUI();
-    
-    // Hide quick-setup banner
-    if (DOM.demoSetupBanner) {
-      DOM.demoSetupBanner.classList.add('hidden');
-    }
+    // Hide login gate, reveal app container
+    if (DOM.loginGate) DOM.loginGate.classList.add('hidden');
+    if (DOM.appContainer) DOM.appContainer.classList.remove('hidden');
     
     // Switch to overview dashboard automatically
     switchTab('overview');
@@ -448,15 +344,10 @@ async function handleFBLogout() {
   
   if (window.lucide) window.lucide.createIcons();
 
-  state.mode = 'MOCK';
-  updateModeUI();
+  // Show login gate, hide app container
+  if (DOM.loginGate) DOM.loginGate.classList.remove('hidden');
+  if (DOM.appContainer) DOM.appContainer.classList.add('hidden');
   
-  // Show quick-setup banner
-  if (DOM.demoSetupBanner) {
-    DOM.demoSetupBanner.classList.remove('hidden');
-  }
-  
-  await loadMetricsData(true);
   setLoading(false);
 }
 
@@ -473,175 +364,35 @@ function bindEvents() {
     });
   });
 
-  // 2. Main Mode Toggles
-  DOM.toggleModeBtn.addEventListener('click', async () => {
-    if (state.mode === 'LIVE') {
-      state.mode = 'MOCK';
-      updateModeUI();
-      
-      // Show quick-setup banner
-      if (DOM.demoSetupBanner) {
-        DOM.demoSetupBanner.classList.remove('hidden');
-      }
-      
-      // Auto-toggle panels in Settings to Mock view
-      DOM.segmentMockBtn.classList.add('active');
-      DOM.segmentLiveBtn.classList.remove('active');
-      DOM.liveSetupForm.classList.remove('show');
-      DOM.mockInfoPanel.classList.add('show');
-
-      await loadMetricsData(true);
-    } else {
-      if (state.appId) {
-        setLoading(true, "Connecting to Facebook...");
-        try {
-          await initFacebookSDK(state.appId);
-          const status = await checkLoginStatus();
-          if (status && status.accessToken) {
-            state.accessToken = status.accessToken;
-            localStorage.setItem('meta_ads_access_token', status.accessToken);
-            state.mode = 'LIVE';
-            updateModeUI();
-            
-            // Hide quick-setup banner
-            if (DOM.demoSetupBanner) {
-              DOM.demoSetupBanner.classList.add('hidden');
-            }
-            
-            // Auto-toggle panels in Settings to Live view
-            DOM.segmentLiveBtn.classList.add('active');
-            DOM.segmentMockBtn.classList.remove('active');
-            DOM.mockInfoPanel.classList.remove('show');
-            DOM.liveSetupForm.classList.add('show');
-
-            DOM.authStatusContainer.innerHTML = `
-              <div class="auth-status-icon logged-in">
-                <i data-lucide="user-check"></i>
-              </div>
-              <div class="auth-status-details">
-                <span class="auth-status-title" style="color:var(--color-emerald)">Connected Session</span>
-                <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
-              </div>
-            `;
-            DOM.btnFbLogin.classList.add('hidden');
-            DOM.btnFbLogout.classList.remove('hidden');
-            if (window.lucide) window.lucide.createIcons();
-            
-            await loadMetricsData(true);
-            setLoading(false);
-            return;
-          }
-        } catch (err) {
-          console.warn("Auto-login check failed:", err);
-        }
-        setLoading(false);
-      }
-
-      // Check if already authenticated, if yes, just toggle
-      if (state.appId && state.accessToken) {
-        state.mode = 'LIVE';
-        updateModeUI();
-        
-        // Hide quick-setup banner
-        if (DOM.demoSetupBanner) {
-          DOM.demoSetupBanner.classList.add('hidden');
-        }
-        
-        DOM.segmentLiveBtn.classList.add('active');
-        DOM.segmentMockBtn.classList.remove('active');
-        DOM.mockInfoPanel.classList.remove('show');
-        DOM.liveSetupForm.classList.add('show');
-
-        await loadMetricsData(true);
-      } else {
-        // Redirect to configuration settings panel and click Live Mode to show form
-        alert("Live mode requires setting up a Meta App ID. We are redirecting you to the Setup page so you can configure it.");
-        switchTab('settings');
-        DOM.segmentLiveBtn.click();
-      }
-    }
-  });
-
-  // Dual segmented switch on settings page
-  DOM.segmentMockBtn.addEventListener('click', () => {
-    if (state.mode !== 'MOCK') {
-      state.mode = 'MOCK';
-      updateModeUI();
-      
-      // Show quick-setup banner
-      if (DOM.demoSetupBanner) {
-        DOM.demoSetupBanner.classList.remove('hidden');
-      }
-      
-      loadMetricsData(true);
-    }
-  });
-
-  DOM.segmentLiveBtn.addEventListener('click', async () => {
-    // ALWAYS toggle UI panels to make the credentials setup form visible immediately!
-    DOM.segmentLiveBtn.classList.add('active');
-    DOM.segmentMockBtn.classList.remove('active');
-    DOM.mockInfoPanel.classList.remove('show');
-    DOM.liveSetupForm.classList.add('show');
-
-    if (state.mode !== 'LIVE') {
-      if (state.appId) {
-        setLoading(true, "Connecting to Facebook...");
-        try {
-          await initFacebookSDK(state.appId);
-          const status = await checkLoginStatus();
-          if (status && status.accessToken) {
-            state.accessToken = status.accessToken;
-            localStorage.setItem('meta_ads_access_token', status.accessToken);
-            state.mode = 'LIVE';
-            updateModeUI();
-            
-            // Hide quick-setup banner
-            if (DOM.demoSetupBanner) {
-              DOM.demoSetupBanner.classList.add('hidden');
-            }
-            
-            DOM.authStatusContainer.innerHTML = `
-              <div class="auth-status-icon logged-in">
-                <i data-lucide="user-check"></i>
-              </div>
-              <div class="auth-status-details">
-                <span class="auth-status-title" style="color:var(--color-emerald)">Connected Session</span>
-                <span class="auth-status-description">Token active. Ready to sync campaigns.</span>
-              </div>
-            `;
-            DOM.btnFbLogin.classList.add('hidden');
-            DOM.btnFbLogout.classList.remove('hidden');
-            if (window.lucide) window.lucide.createIcons();
-            
-            await loadMetricsData(true);
-          }
-        } catch (err) {
-          console.warn("Auto-login check failed:", err);
-        }
-        setLoading(false);
-      }
-    }
-  });
-
-  DOM.btnTriggerLiveSwitch.addEventListener('click', () => {
-    DOM.segmentLiveBtn.click();
-  });
-
-  // Quick Facebook Login banner trigger
-  if (DOM.btnQuickFbLogin) {
-    DOM.btnQuickFbLogin.addEventListener('click', handleFBLogin);
+  // 2. Facebook App ID Synced Inputs
+  if (DOM.fbAppIdInput) {
+    DOM.fbAppIdInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      state.appId = val;
+      localStorage.setItem('meta_ads_app_id', val);
+      if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = val;
+    });
   }
 
-  // Save App ID to state as the user types
-  DOM.fbAppIdInput.addEventListener('input', (e) => {
-    state.appId = e.target.value.trim();
-    localStorage.setItem('meta_ads_app_id', state.appId);
-  });
+  if (DOM.gateFbAppIdInput) {
+    DOM.gateFbAppIdInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      state.appId = val;
+      localStorage.setItem('meta_ads_app_id', val);
+      if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = val;
+    });
+  }
 
-  // 3. Setup credentials triggers
-  DOM.btnFbLogin.addEventListener('click', handleFBLogin);
-  DOM.btnFbLogout.addEventListener('click', handleFBLogout);
+  // 3. Credentials triggers
+  if (DOM.btnGateFbLogin) {
+    DOM.btnGateFbLogin.addEventListener('click', handleFBLogin);
+  }
+  if (DOM.btnFbLogin) {
+    DOM.btnFbLogin.addEventListener('click', handleFBLogin);
+  }
+  if (DOM.btnFbLogout) {
+    DOM.btnFbLogout.addEventListener('click', handleFBLogout);
+  }
 
   // 4. Form selectors triggers
   DOM.businessPortfolioSelect.addEventListener('change', (e) => {
@@ -689,11 +440,11 @@ function bindEvents() {
  */
 async function appStartup() {
   bindEvents();
-  updateModeUI();
 
-  // Populate App ID field if stored
+  // Populate App ID fields if stored
   if (state.appId) {
-    DOM.fbAppIdInput.value = state.appId;
+    if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = state.appId;
+    if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = state.appId;
     
     setLoading(true, "Checking Facebook auth status...");
     try {
@@ -727,10 +478,6 @@ async function appStartup() {
       }
       
       if (tokenValid) {
-        // Automatically switch to LIVE mode
-        state.mode = 'LIVE';
-        updateModeUI();
-        
         DOM.authStatusContainer.innerHTML = `
           <div class="auth-status-icon logged-in">
             <i data-lucide="user-check"></i>
@@ -743,36 +490,33 @@ async function appStartup() {
         DOM.btnFbLogin.classList.add('hidden');
         DOM.btnFbLogout.classList.remove('hidden');
         
-        // Hide quick-setup banner
-        if (DOM.demoSetupBanner) {
-          DOM.demoSetupBanner.classList.add('hidden');
-        }
+        // Hide login gate and show app container
+        if (DOM.loginGate) DOM.loginGate.classList.add('hidden');
+        if (DOM.appContainer) DOM.appContainer.classList.remove('hidden');
+
+        // Load reports
+        await loadMetricsData(true);
       } else {
         // No active session or expired
         localStorage.removeItem('meta_ads_access_token');
         state.accessToken = '';
+        
+        // Ensure gate is visible and app is hidden
+        if (DOM.loginGate) DOM.loginGate.classList.remove('hidden');
+        if (DOM.appContainer) DOM.appContainer.classList.add('hidden');
       }
     } catch (err) {
       console.warn("Could not check Facebook status during boot:", err);
     }
-  }
-
-  // Initialize Setup & API tab panel view state to match active mode
-  if (state.mode === 'LIVE') {
-    DOM.segmentLiveBtn.classList.add('active');
-    DOM.segmentMockBtn.classList.remove('active');
-    DOM.mockInfoPanel.classList.remove('show');
-    DOM.liveSetupForm.classList.add('show');
   } else {
-    DOM.segmentMockBtn.classList.add('active');
-    DOM.segmentLiveBtn.classList.remove('active');
-    DOM.liveSetupForm.classList.remove('show');
-    DOM.mockInfoPanel.classList.add('show');
+    // No App ID configured yet, must show login gate
+    if (DOM.loginGate) DOM.loginGate.classList.remove('hidden');
+    if (DOM.appContainer) DOM.appContainer.classList.add('hidden');
   }
 
-  // Finalize icons and load base reports
+  // Finalize icons
   if (window.lucide) window.lucide.createIcons();
-  await loadMetricsData(true);
+  setLoading(false);
 }
 
 // Initial Boot trigger
