@@ -21,7 +21,8 @@ const state = {
   activeTab: 'overview',
   activeDataset: null, // Cached analytics payload
   adAccounts: [], // List of available ad accounts
-  businessPortfolios: [] // List of Business Manager Portfolios
+  businessPortfolios: [], // List of Business Manager Portfolios
+  activeHelpStep: 0 // Wizard active page index
 };
 
 // --- DOM Cache Elements ---
@@ -44,6 +45,19 @@ const DOM = {
   loginBrand: document.querySelector('.login-brand'),
   developerPanel: document.getElementById('developer-panel'),
   gateFbAppIdInput: document.getElementById('gate-fb-app-id'),
+  
+  // Help Modal Selectors
+  helpModal: document.getElementById('help-modal'),
+  btnOpenHelp: document.getElementById('btn-open-help'),
+  btnPrevHelp: document.getElementById('btn-prev-help'),
+  btnNextHelp: document.getElementById('btn-next-help'),
+  btnFinishHelp: document.getElementById('btn-finish-help'),
+  btnCloseHelp: document.getElementById('btn-close-help'),
+  helpSteps: document.querySelectorAll('.help-step'),
+  progressBarFill: document.getElementById('progress-bar-fill'),
+  stepIndicator: document.getElementById('step-indicator'),
+  helpRedirectUri: document.getElementById('help-redirect-uri'),
+  btnCopyRedirect: document.getElementById('btn-copy-redirect'),
   
   // Settings Live Inputs
   btnFbLogin: document.getElementById('btn-fb-login'),
@@ -405,6 +419,39 @@ async function handleFBLogout() {
   setLoading(false);
 }
 
+// --- Help Wizard Modal Functions ---
+
+function updateWizardUI() {
+  const step = state.activeHelpStep;
+  
+  // Update visibility of steps
+  DOM.helpSteps.forEach((element, index) => {
+    if (index === step) {
+      element.classList.remove('hidden');
+    } else {
+      element.classList.add('hidden');
+    }
+  });
+
+  // Update progress bar
+  const progressPercent = ((step + 1) / DOM.helpSteps.length) * 100;
+  if (DOM.progressBarFill) DOM.progressBarFill.style.width = `${progressPercent}%`;
+  
+  // Update step label indicator
+  if (DOM.stepIndicator) DOM.stepIndicator.innerText = `Step ${step + 1} of ${DOM.helpSteps.length}`;
+
+  // Update navigation button states
+  if (DOM.btnPrevHelp) DOM.btnPrevHelp.disabled = (step === 0);
+  
+  if (step === DOM.helpSteps.length - 1) {
+    if (DOM.btnNextHelp) DOM.btnNextHelp.classList.add('hidden');
+    if (DOM.btnFinishHelp) DOM.btnFinishHelp.classList.remove('hidden');
+  } else {
+    if (DOM.btnNextHelp) DOM.btnNextHelp.classList.remove('hidden');
+    if (DOM.btnFinishHelp) DOM.btnFinishHelp.classList.add('hidden');
+  }
+}
+
 // --- Application Core Events Setup ---
 
 function bindEvents() {
@@ -444,6 +491,67 @@ function bindEvents() {
       e.preventDefault();
       if (DOM.developerPanel) {
         DOM.developerPanel.classList.toggle('hidden');
+      }
+    });
+  }
+
+  // 5. Setup Walkthrough Wizard Actions
+  if (DOM.btnOpenHelp) {
+    DOM.btnOpenHelp.addEventListener('click', () => {
+      state.activeHelpStep = 0;
+      updateWizardUI();
+      if (DOM.helpRedirectUri) {
+        DOM.helpRedirectUri.innerText = window.location.origin;
+      }
+      if (DOM.helpModal) DOM.helpModal.classList.remove('hidden');
+    });
+  }
+
+  if (DOM.btnPrevHelp) {
+    DOM.btnPrevHelp.addEventListener('click', () => {
+      if (state.activeHelpStep > 0) {
+        state.activeHelpStep--;
+        updateWizardUI();
+      }
+    });
+  }
+
+  if (DOM.btnNextHelp) {
+    DOM.btnNextHelp.addEventListener('click', () => {
+      if (state.activeHelpStep < DOM.helpSteps.length - 1) {
+        state.activeHelpStep++;
+        updateWizardUI();
+      }
+    });
+  }
+
+  const closeWizard = () => {
+    if (DOM.helpModal) DOM.helpModal.classList.add('hidden');
+  };
+
+  if (DOM.btnCloseHelp) DOM.btnCloseHelp.addEventListener('click', closeWizard);
+  if (DOM.btnFinishHelp) DOM.btnFinishHelp.addEventListener('click', closeWizard);
+
+  // Copy Redirect URI Clipboard Action
+  if (DOM.btnCopyRedirect) {
+    DOM.btnCopyRedirect.addEventListener('click', async () => {
+      const uri = window.location.origin;
+      try {
+        await navigator.clipboard.writeText(uri);
+        const span = DOM.btnCopyRedirect.querySelector('span');
+        const icon = DOM.btnCopyRedirect.querySelector('i');
+        
+        if (span) span.innerText = "Copied!";
+        if (icon) icon.setAttribute('data-lucide', 'check');
+        if (window.lucide) window.lucide.createIcons();
+
+        setTimeout(() => {
+          if (span) span.innerText = "Copy URL";
+          if (icon) icon.setAttribute('data-lucide', 'copy');
+          if (window.lucide) window.lucide.createIcons();
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy text:", err);
       }
     });
   }

@@ -47,6 +47,12 @@
           <span>Login with Facebook</span>
         </button>
 
+        <!-- Help/Walkthrough Trigger Button -->
+        <button type="button" class="btn btn-secondary btn-block mt-2" id="btn-open-help">
+          <i data-lucide="help-circle"></i>
+          <span>Setup Walkthrough (Step by Step)</span>
+        </button>
+
         <!-- Secret Developer Override Panel (revealed by double-clicking the brand logo) -->
         <div class="developer-panel hidden" id="developer-panel">
           <div class="settings-form-group">
@@ -65,6 +71,116 @@
       </div>
     </div>
   </div>
+
+  <!-- Step-by-Step On-Screen Setup Wizard Modal -->
+  <div class="help-modal hidden" id="help-modal">
+    <div class="help-modal-card glass-card">
+      <div class="help-modal-header">
+        <div class="header-left">
+          <i data-lucide="help-circle" class="modal-icon"></i>
+          <h3>Meta App Setup Wizard</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-help" title="Close Setup Wizard">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Progress Indicators -->
+      <div class="wizard-progress">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-bar-fill" style="width: 20%;"></div>
+        </div>
+        <span class="step-indicator" id="step-indicator">Step 1 of 5</span>
+      </div>
+
+      <!-- Step Content Area -->
+      <div class="help-modal-body">
+        
+        <!-- Step 1: Developer Account -->
+        <div class="help-step" data-step="0">
+          <h4>Step 1: Register as a Meta Developer</h4>
+          <p>To communicate with Meta APIs, you need to sign up as a developer on their official platform.</p>
+          <ol class="step-list">
+            <li>Go to <a href="https://developers.facebook.com/" target="_blank" rel="noopener">developers.facebook.com</a>.</li>
+            <li>Click <strong>Log In</strong> in the top right using your standard Facebook account.</li>
+            <li>Click <strong>Get Started</strong> and accept the Meta Developer Agreements.</li>
+            <li>Confirm your email and complete the developer questionnaire.</li>
+          </ol>
+        </div>
+
+        <!-- Step 2: Create App -->
+        <div class="help-step hidden" data-step="1">
+          <h4>Step 2: Create a Business Application</h4>
+          <p>You must register a new application under your developer profile to receive an App ID:</p>
+          <ol class="step-list">
+            <li>Go to your App Dashboard and click **Create App** (green button).</li>
+            <li>Under App Use Cases, choose **Other** or **Business**, and click **Next**.</li>
+            <li>Select **Business** as the App Type. This is critical for portfolio/campaign integrations.</li>
+            <li>Set a Display Name (e.g. `My Reporting Tool`) and choose your Business Portfolio, then click **Create App**.</li>
+          </ol>
+        </div>
+
+        <!-- Step 3: Add Products -->
+        <div class="help-step hidden" data-step="2">
+          <h4>Step 3: Add Login and Marketing API</h4>
+          <p>Add the mandatory authentication and reporting products to your new App ID:</p>
+          <ol class="step-list">
+            <li>In the left-side panel of your Meta App Dashboard, find **Facebook Login** and click **Set Up**.</li>
+            <li>Scroll down and locate the **Marketing API** product card, then click **Set Up**. This links your App to Meta's insights endpoints.</li>
+          </ol>
+        </div>
+
+        <!-- Step 4: Configure Redirect URIs -->
+        <div class="help-step hidden" data-step="3">
+          <h4>Step 4: Configure Redirect URIs</h4>
+          <p>Authorise this dashboard's domain name so Facebook can securely log you in:</p>
+          <ol class="step-list">
+            <li>Expand **Facebook Login** in the sidebar -> click **Settings**.</li>
+            <li>Under **Client OAuth Settings**, locate the **Valid OAuth Redirect URIs** input field.</li>
+            <li>Copy and paste your active domain origin (shown below):</li>
+          </ol>
+          <div class="redirect-uri-copy-box">
+            <span class="uri-text" id="help-redirect-uri">http://localhost:3000</span>
+            <button class="btn btn-secondary btn-sm" id="btn-copy-redirect">
+              <i data-lucide="copy"></i>
+              <span>Copy URL</span>
+            </button>
+          </div>
+          <p class="form-help-text text-xxs mt-2">Also, ensure **Login with JavaScript SDK** is toggled to **Yes** and add the same URL to **Allowed Domains for the JavaScript SDK**.</p>
+        </div>
+
+        <!-- Step 5: Sandbox Testing or App Review -->
+        <div class="help-step hidden" data-step="4">
+          <h4>Step 5: Activate Access & Connect</h4>
+          <p>Facebook Apps start in Development Mode, restricting access to testers:</p>
+          <ol class="step-list">
+            <li>**Sandbox Check**: In the sidebar, go to **App Roles -> Roles -> Testers**. Click **Add Testers** and invite other users. They must accept the invitation on developers.facebook.com.</li>
+            <li>**Go Live**: Go to **App Review -> Permissions & Features**, request Advanced Access for `ads_read` and `business_management`, and toggle the switch in the top bar to **Live**.</li>
+            <li>Double-click the **AdPulse Analytics** logo on the login card to enter your App ID and log in!</li>
+          </ol>
+        </div>
+
+      </div>
+
+      <!-- Navigation Footer -->
+      <div class="help-modal-footer">
+        <button class="btn btn-secondary" id="btn-prev-help" disabled>
+          <i data-lucide="chevron-left"></i>
+          <span>Back</span>
+        </button>
+        <div class="footer-right">
+          <button class="btn btn-primary" id="btn-next-help">
+            <span>Next Step</span>
+            <i data-lucide="chevron-right"></i>
+          </button>
+          <button class="btn btn-secondary hidden" id="btn-finish-help">
+            <span>Close Wizard</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Global App Wrapper -->
   <div class="app-container hidden">
