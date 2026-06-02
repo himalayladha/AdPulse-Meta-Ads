@@ -110,10 +110,9 @@ To allow **any** Facebook user or marketer to access your dashboard without manu
 
 ### 2. Hook it up to the Dashboard
 1. Open the AdPulse Login Gate in your browser.
-2. **Double-click** the **AdPulse Analytics** brand logo at the top of the card.
-3. Paste your custom numeric App ID into the **Developer App ID Override** input field.
-4. Click **Login with Facebook**. The SDK will now initialize and authenticate through your own custom application!
-5. To hardcode this permanently for your customers, replace the `SYSTEM_FB_APP_ID` constant in `src/main.js` with your App ID:
+2. Paste your custom numeric App ID into the **Meta / Facebook App ID** input field.
+3. Click **Login with Facebook**. The SDK will now initialize and authenticate through your own custom application!
+4. To hardcode this permanently for your customers, replace the `SYSTEM_FB_APP_ID` constant in `src/main.js` with your App ID:
    ```javascript
    const SYSTEM_FB_APP_ID = 'YOUR_NEW_APP_ID';
    ```

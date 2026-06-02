@@ -42,6 +42,19 @@
       </div>
 
       <div class="login-form">
+        <div class="settings-form-group" style="margin-bottom: 16px;">
+          <label for="gate-fb-app-id" class="form-label" style="font-weight: 500; font-size: 13px; color: var(--text-main); margin-bottom: 8px; display: block;">
+            Meta / Facebook App ID
+          </label>
+          <div class="input-icon-wrap" style="position: relative; display: flex; align-items: center;">
+            <i data-lucide="key" style="position: absolute; left: 12px; color: var(--text-dim); width: 16px; height: 16px;"></i>
+            <input type="text" id="gate-fb-app-id" placeholder="Enter your Facebook App ID" value="" style="width: 100%; padding: 12px 12px 12px 38px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: #fff; font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color var(--transition-fast);">
+          </div>
+          <p class="form-help-text" style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+            Configure this ID in your Meta Developer Portal. Click the Setup Walkthrough below for help.
+          </p>
+        </div>
+
         <button class="btn btn-primary btn-block btn-lg" id="btn-gate-fb-login">
           <i data-lucide="facebook"></i>
           <span>Login with Facebook</span>
@@ -52,18 +65,6 @@
           <i data-lucide="help-circle"></i>
           <span>Setup Walkthrough (Step by Step)</span>
         </button>
-
-        <!-- Secret Developer Override Panel (revealed by double-clicking the brand logo) -->
-        <div class="developer-panel hidden" id="developer-panel">
-          <div class="settings-form-group">
-            <label for="gate-fb-app-id" class="form-label text-xs">Developer App ID Override</label>
-            <div class="input-icon-wrap">
-              <i data-lucide="globe"></i>
-              <input type="text" id="gate-fb-app-id" placeholder="Leave blank to use default App ID" value="">
-            </div>
-            <p class="form-help-text">Overriding Default App ID: 36377800718500903</p>
-          </div>
-        </div>
       </div>
 
       <div class="login-footer">
@@ -160,7 +161,7 @@
           <ol class="step-list">
             <li>**Sandbox Check**: In the sidebar, go to **App Roles -> Roles -> Testers**. Click **Add Testers** and invite other users. They must accept the invitation on developers.facebook.com.</li>
             <li>**Go Live**: Go to **App Review -> Permissions & Features**, request Advanced Access for `ads_read` and `business_management`, and toggle the switch in the top bar to **Live**.</li>
-            <li>Double-click the **AdPulse Analytics** logo on the login card to enter your App ID and log in!</li>
+            <li>Paste your new **App ID** into the visible input field at the top of the login card and click **Login with Facebook**!</li>
           </ol>
         </div>
 
@@ -597,8 +598,8 @@
                 <div class="copy-url-group" style="margin-bottom: 12px;">
                   <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Privacy Policy URL</span>
                   <div class="redirect-uri-copy-box" style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
-                    <span class="uri-text" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://ad-pulse-meta-ads.vercel.app/privacy.html</span>
-                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" data-copy="https://ad-pulse-meta-ads.vercel.app/privacy.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                    <span class="uri-text" id="settings-privacy-url" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://your-domain.com/privacy.html</span>
+                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-settings-privacy" data-copy="https://your-domain.com/privacy.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
                       <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
                       <span>Copy</span>
                     </button>
@@ -608,8 +609,8 @@
                 <div class="copy-url-group" style="margin-bottom: 12px;">
                   <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Terms of Service URL</span>
                   <div class="redirect-uri-copy-box" style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
-                    <span class="uri-text" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://ad-pulse-meta-ads.vercel.app/terms.html</span>
-                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" data-copy="https://ad-pulse-meta-ads.vercel.app/terms.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                    <span class="uri-text" id="settings-terms-url" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">https://your-domain.com/terms.html</span>
+                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-settings-terms" data-copy="https://your-domain.com/terms.html" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
                       <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
                       <span>Copy</span>
                     </button>
@@ -619,8 +620,8 @@
                 <div class="copy-url-group">
                   <span style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">App Domain</span>
                   <div class="redirect-uri-copy-box" style="margin-top: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 12px; gap: 8px;">
-                    <span class="uri-text" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">ad-pulse-meta-ads.vercel.app</span>
-                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" data-copy="ad-pulse-meta-ads.vercel.app" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
+                    <span class="uri-text" id="settings-app-domain" style="font-family: monospace; font-size: 11px; color: var(--text-main); word-break: break-all;">your-domain.com</span>
+                    <button type="button" class="btn btn-secondary btn-xs btn-copy-inline" id="btn-copy-settings-domain" data-copy="your-domain.com" style="padding: 4px 8px; font-size: 10px; flex-shrink: 0; display: flex; align-items: center; gap: 4px;">
                       <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
                       <span>Copy</span>
                     </button>
@@ -636,6 +637,19 @@
               <i data-lucide="key-round"></i> API Credentials Setup
             </h3>
             <div class="settings-card-body">
+              <div class="settings-form-group" style="margin-bottom: 20px;">
+                <label for="settings-fb-app-id" class="form-label" style="font-weight: 500; font-size: 13px; color: var(--text-main); margin-bottom: 8px; display: block;">
+                  Meta / Facebook App ID
+                </label>
+                <div class="input-icon-wrap" style="position: relative; display: flex; align-items: center;">
+                  <i data-lucide="key" style="position: absolute; left: 12px; color: var(--text-dim); width: 16px; height: 16px;"></i>
+                  <input type="text" id="settings-fb-app-id" placeholder="Enter your Facebook App ID" value="" style="width: 100%; padding: 10px 12px 10px 38px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: #fff; font-family: var(--font-body); font-size: 13px; outline: none; transition: border-color var(--transition-fast);">
+                </div>
+                <p class="form-help-text" style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+                  Saves automatically to browser memory.
+                </p>
+              </div>
+
               <div class="settings-form-group">
                 <label class="form-label">Facebook Auth Session</label>
                 <div class="auth-status-container" id="auth-status-container">
@@ -644,7 +658,7 @@
                   </div>
                   <div class="auth-status-details">
                     <span class="auth-status-title" id="auth-status-title">Disconnected</span>
-                    <span class="auth-status-description" id="auth-status-desc">Click log in to establish a secure session with Facebook.</span>
+                    <span class="auth-status-description" id="auth-status-desc">Provide your App ID and click log in.</span>
                   </div>
                 </div>
               </div>

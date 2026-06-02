@@ -8,7 +8,7 @@ import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './d
 import { mockBusinessPortfolios, mockAdAccounts, getMockAccountInsights, getMockCampaigns, getMockAdSets, getMockPlacements } from './mock-data.js';
 
 // --- System Application Constant App ID ---
-const SYSTEM_FB_APP_ID = '36377800718500903';
+const SYSTEM_FB_APP_ID = '';
 
 // --- Application Core State ---
 const state = {
@@ -43,7 +43,6 @@ const DOM = {
   appContainer: document.querySelector('.app-container'),
   btnGateFbLogin: document.getElementById('btn-gate-fb-login'),
   loginBrand: document.querySelector('.login-brand'),
-  developerPanel: document.getElementById('developer-panel'),
   gateFbAppIdInput: document.getElementById('gate-fb-app-id'),
   
   // Help Modal Selectors
@@ -60,6 +59,7 @@ const DOM = {
   btnCopyRedirect: document.getElementById('btn-copy-redirect'),
   
   // Settings Live Inputs
+  settingsFbAppIdInput: document.getElementById('settings-fb-app-id'),
   btnFbLogin: document.getElementById('btn-fb-login'),
   btnFbLogout: document.getElementById('btn-fb-logout'),
   authStatusContainer: document.getElementById('auth-status-container'),
@@ -313,6 +313,12 @@ function triggerDashboardRefresh() {
 async function handleFBLogin() {
   const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
   
+  if (!activeAppId) {
+    alert("Please enter a valid Meta / Facebook App ID first. Need help? Click the step-by-step Setup Walkthrough!");
+    setLoading(false);
+    return;
+  }
+  
   try {
     let auth;
     // 1. If SDK is already loaded, invoke Login Flow immediately to bypass browser popup blockers!
@@ -479,21 +485,22 @@ function bindEvents() {
   }
 
   // 3. Custom App ID inputs listeners
+  const syncAppId = (val) => {
+    state.appId = val;
+    localStorage.setItem('meta_ads_app_id', val);
+    if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = val;
+    if (DOM.settingsFbAppIdInput) DOM.settingsFbAppIdInput.value = val;
+  };
+
   if (DOM.gateFbAppIdInput) {
     DOM.gateFbAppIdInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      state.appId = val;
-      localStorage.setItem('meta_ads_app_id', val);
+      syncAppId(e.target.value.trim());
     });
   }
 
-  // 4. Secret Developer Panel Toggle (Double Click Logo)
-  if (DOM.loginBrand) {
-    DOM.loginBrand.addEventListener('dblclick', (e) => {
-      e.preventDefault();
-      if (DOM.developerPanel) {
-        DOM.developerPanel.classList.toggle('hidden');
-      }
+  if (DOM.settingsFbAppIdInput) {
+    DOM.settingsFbAppIdInput.addEventListener('input', (e) => {
+      syncAppId(e.target.value.trim());
     });
   }
 
@@ -633,13 +640,34 @@ async function appStartup() {
   // Populate App ID fields if stored
   if (state.appId) {
     if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = state.appId;
-    if (DOM.developerPanel) DOM.developerPanel.classList.remove('hidden');
+    if (DOM.settingsFbAppIdInput) DOM.settingsFbAppIdInput.value = state.appId;
   }
+
+  // Dynamically populate settings metadata verification URLs based on active host
+  const privacyUrl = `${window.location.origin}/privacy.html`;
+  const termsUrl = `${window.location.origin}/terms.html`;
+  const appDomain = window.location.hostname;
+
+  const txtPrivacy = document.getElementById('settings-privacy-url');
+  const btnPrivacy = document.getElementById('btn-copy-settings-privacy');
+  const txtTerms = document.getElementById('settings-terms-url');
+  const btnTerms = document.getElementById('btn-copy-settings-terms');
+  const txtDomain = document.getElementById('settings-app-domain');
+  const btnDomain = document.getElementById('btn-copy-settings-domain');
+
+  if (txtPrivacy) txtPrivacy.innerText = privacyUrl;
+  if (btnPrivacy) btnPrivacy.setAttribute('data-copy', privacyUrl);
+  if (txtTerms) txtTerms.innerText = termsUrl;
+  if (btnTerms) btnTerms.setAttribute('data-copy', termsUrl);
+  if (txtDomain) txtDomain.innerText = appDomain;
+  if (btnDomain) btnDomain.setAttribute('data-copy', appDomain);
 
   const activeAppId = state.appId.trim() || SYSTEM_FB_APP_ID;
   
-  // Pre-initialize Facebook SDK in the background immediately to avoid popup blockers
-  initFacebookSDK(activeAppId).catch(err => console.warn("Facebook SDK background pre-init failed:", err));
+  if (activeAppId) {
+    // Pre-initialize Facebook SDK in the background immediately to avoid popup blockers
+    initFacebookSDK(activeAppId).catch(err => console.warn("Facebook SDK background pre-init failed:", err));
+  }
 
   setLoading(true, "Checking Facebook auth status...");
   try {
