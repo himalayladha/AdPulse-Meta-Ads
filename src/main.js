@@ -3,7 +3,7 @@
    ========================================================================== */
 
 import { initFacebookSDK, loginWithFacebook, logoutFacebook, checkLoginStatus } from './fb-sdk.js';
-import { fetchUserProfile, fetchBusinessPortfolios, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
+import { fetchUserProfile, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
 import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './dashboard.js';
 
 // --- System Application Constant App ID ---
@@ -13,14 +13,12 @@ const SYSTEM_FB_APP_ID = '';
 const state = {
   appId: localStorage.getItem('meta_ads_app_id') || '',
   accessToken: localStorage.getItem('meta_ads_access_token') || '',
-  activeBusinessId: localStorage.getItem('meta_ads_active_business_id') || 'all',
   activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || '',
   activeAdAccountName: '',
   activeDatePreset: 'last_30d',
   activeTab: 'overview',
   activeDataset: null, // Cached analytics payload
   adAccounts: [], // List of available ad accounts
-  businessPortfolios: [], // List of Business Manager Portfolios
   activeHelpStep: 0 // Wizard active page index
 };
 
@@ -33,7 +31,6 @@ const DOM = {
   pageSubtitle: document.getElementById('page-subtitle'),
   
   // Selectors
-  businessPortfolioSelect: document.getElementById('business-portfolio-select'),
   adAccountSelect: document.getElementById('ad-account-select'),
   dateRangeSelect: document.getElementById('date-range-select'),
   
@@ -154,21 +151,15 @@ async function loadMetricsData(forceFetch = false) {
       throw new Error("No active Facebook login session. Please authenticate first.");
     }
 
-    // 1. Fetch live portfolios and ad accounts if not cached or force requested
-    if (state.businessPortfolios.length === 0 || forceFetch) {
-      setLoading(true, "Fetching Business Portfolios...");
-      state.businessPortfolios = await fetchBusinessPortfolios(state.accessToken);
-      populateBusinessPortfolioDropdown();
-    }
-
+    // 1. Fetch live ad accounts if not cached or force requested
     if (state.adAccounts.length === 0 || forceFetch) {
       setLoading(true, "Fetching authorized Meta Ad Accounts...");
-      state.adAccounts = await fetchAdAccounts(state.accessToken, state.activeBusinessId);
+      state.adAccounts = await fetchAdAccounts(state.accessToken);
       populateAdAccountDropdown();
     }
 
     if (state.adAccounts.length === 0) {
-      throw new Error("No active ad accounts found under the selected Portfolio.");
+      throw new Error("No active ad accounts found. Please make sure your Facebook profile is linked to an active Meta Ad Account.");
     }
 
     // Check active selection validation
@@ -242,27 +233,6 @@ function populateAdAccountDropdown() {
   }
 }
 
-function populateBusinessPortfolioDropdown() {
-  if (!DOM.businessPortfolioSelect) return;
-  DOM.businessPortfolioSelect.innerHTML = "";
-
-  // Base Option for personal profiles or all manager entities
-  const baseOpt = document.createElement("option");
-  baseOpt.value = "all";
-  baseOpt.innerText = "All / Personal Accounts";
-  DOM.businessPortfolioSelect.appendChild(baseOpt);
-
-  state.businessPortfolios.forEach(biz => {
-    const opt = document.createElement("option");
-    opt.value = biz.id;
-    opt.innerText = biz.name;
-    DOM.businessPortfolioSelect.appendChild(opt);
-  });
-
-  if (state.activeBusinessId) {
-    DOM.businessPortfolioSelect.value = state.activeBusinessId;
-  }
-}
 
 /**
  * Safely passes cached datasets to rendering coordinators
@@ -528,15 +498,6 @@ function bindEvents() {
     });
   });
 
-  // 4. Form selectors triggers
-  DOM.businessPortfolioSelect.addEventListener('change', (e) => {
-    state.activeBusinessId = e.target.value;
-    localStorage.setItem('meta_ads_active_business_id', e.target.value);
-    
-    // Invalidate currently selected ad account to auto-select the first matching account
-    state.activeAdAccountId = "";
-    loadMetricsData(true); // force reload ad accounts under new portfolio
-  });
 
   DOM.adAccountSelect.addEventListener('change', (e) => {
     state.activeAdAccountId = e.target.value;
