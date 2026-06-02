@@ -7,11 +7,11 @@ import { fetchUserProfile, fetchAdAccounts, fetchAccountDailyInsights, fetchCamp
 import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './dashboard.js';
 
 // --- System Application Constant App ID ---
-const SYSTEM_FB_APP_ID = '36377800718500903';
+const SYSTEM_FB_APP_ID = '';
 
 // --- Application Core State ---
 const state = {
-  appId: localStorage.getItem('meta_ads_app_id') || SYSTEM_FB_APP_ID,
+  appId: localStorage.getItem('meta_ads_app_id') || '',
   accessToken: localStorage.getItem('meta_ads_access_token') || '',
   activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || '',
   activeAdAccountName: '',
