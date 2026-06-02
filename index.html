@@ -42,15 +42,6 @@
       </div>
 
       <div class="login-form">
-        <div class="settings-form-group">
-          <label for="gate-fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
-          <div class="input-icon-wrap">
-            <i data-lucide="globe"></i>
-            <input type="text" id="gate-fb-app-id" placeholder="Leave blank to use default App ID" value="">
-          </div>
-          <p class="form-help-text">Enter a developer application App ID, or leave blank to use the built-in default app ID.</p>
-        </div>
-
         <button class="btn btn-primary btn-block btn-lg" id="btn-gate-fb-login">
           <i data-lucide="facebook"></i>
           <span>Login with Facebook</span>
@@ -451,44 +442,20 @@
           <!-- Instructions Card -->
           <div class="settings-card glass-card">
             <h3 class="settings-card-title">
-              <i data-lucide="help-circle"></i> Connecting to the Meta Ads API
+              <i data-lucide="help-circle"></i> Secure Session Info
             </h3>
             <div class="settings-card-body">
-              <p class="instructions-intro">Follow these simple steps to hook this dashboard up to your live Meta advertising records:</p>
-              <ol class="setup-steps">
-                <li>
-                  <span class="step-num">1</span>
-                  <div class="step-content">
-                    <strong>Create a Developer Application:</strong>
-                    Go to the <a href="https://developers.facebook.com/" target="_blank" rel="noopener">Meta for Developers Console</a>, register an account, and click <strong>Create App</strong>. Choose "Other" or "Business" and complete the registration.
-                  </div>
-                </li>
-                <li>
-                  <span class="step-num">2</span>
-                  <div class="step-content">
-                    <strong>Add Facebook Login & Marketing API:</strong>
-                    In your application dashboard, add the <strong>Facebook Login</strong> product and the <strong>Marketing API</strong> product.
-                  </div>
-                </li>
-                <li>
-                  <span class="step-num">3</span>
-                  <div class="step-content">
-                    <strong>Configure Redirect URIs:</strong>
-                    Under Facebook Login Settings, add your development domain (e.g., <code>http://localhost:3000</code> or your hosting domain) to the "Valid OAuth Redirect URIs".
-                  </div>
-                </li>
-                <li>
-                  <span class="step-num">4</span>
-                  <div class="step-content">
-                    <strong>Copy App ID & Log In:</strong>
-                    Copy your App ID from the top menu, paste it into the <strong>API Keys</strong> card to the right, and authenticate your Facebook account to fetch active campaigns!
-                  </div>
-                </li>
-              </ol>
+              <p class="instructions-intro">Securely connect and manage your active Meta Ads reporting session:</p>
               <div class="alert-box note">
+                <i data-lucide="shield-check"></i>
+                <div>
+                  <strong>Direct Client-Side Connection:</strong> AdPulse queries the Meta Marketing Graph API directly from your browser. Access tokens are kept strictly in your local device memory and never transmitted to external databases.
+                </div>
+              </div>
+              <div class="alert-box success">
                 <i data-lucide="info"></i>
                 <div>
-                  <strong>Developer Sandbox Note:</strong> In development mode, only administrative accounts, developer profiles, or authorized test users inside your Meta developer dashboard can log in and retrieve reporting records.
+                  <strong>Verification details:</strong> This setup communicates through the authorized app identifier. All linked ad accounts, business managers, campaigns, and ad sets are loaded automatically.
                 </div>
               </div>
             </div>
@@ -501,15 +468,6 @@
             </h3>
             <div class="settings-card-body">
               <div class="settings-form-group">
-                <label for="fb-app-id" class="form-label">Facebook App ID <span class="optional">(Optional)</span></label>
-                <div class="input-icon-wrap">
-                  <i data-lucide="globe"></i>
-                  <input type="text" id="fb-app-id" placeholder="Leave blank to use default App ID" value="">
-                </div>
-                <p class="form-help-text">Enter a custom Developer App ID, or leave blank to use the built-in system App ID.</p>
-              </div>
-
-              <div class="settings-form-group">
                 <label class="form-label">Facebook Auth Session</label>
                 <div class="auth-status-container" id="auth-status-container">
                   <div class="auth-status-icon logged-out">
@@ -517,7 +475,7 @@
                   </div>
                   <div class="auth-status-details">
                     <span class="auth-status-title" id="auth-status-title">Disconnected</span>
-                    <span class="auth-status-description" id="auth-status-desc">Provide your App ID and log in to establish a session.</span>
+                    <span class="auth-status-description" id="auth-status-desc">Click log in to establish a secure session with Facebook.</span>
                   </div>
                 </div>
               </div>

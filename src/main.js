@@ -6,9 +6,11 @@ import { initFacebookSDK, loginWithFacebook, logoutFacebook, checkLoginStatus } 
 import { fetchUserProfile, fetchBusinessPortfolios, fetchAdAccounts, fetchAccountDailyInsights, fetchCampaignsWithInsights, fetchAdSetsWithInsights, fetchPlacementsWithInsights } from './meta-api.js';
 import { updateDashboardUI, exportCurrentReportCSV, bindTableSorters } from './dashboard.js';
 
+// --- System Application Constant App ID ---
+const SYSTEM_FB_APP_ID = '36377800718500903';
+
 // --- Application Core State ---
 const state = {
-  appId: localStorage.getItem('meta_ads_app_id') || '36377800718500903',
   accessToken: localStorage.getItem('meta_ads_access_token') || '',
   activeBusinessId: localStorage.getItem('meta_ads_active_business_id') || 'all',
   activeAdAccountId: localStorage.getItem('meta_ads_active_ad_account_id') || '',
@@ -36,11 +38,9 @@ const DOM = {
   // Login Gate & App Wrapper
   loginGate: document.getElementById('login-gate'),
   appContainer: document.querySelector('.app-container'),
-  gateFbAppIdInput: document.getElementById('gate-fb-app-id'),
   btnGateFbLogin: document.getElementById('btn-gate-fb-login'),
   
   // Settings Live Inputs
-  fbAppIdInput: document.getElementById('fb-app-id'),
   btnFbLogin: document.getElementById('btn-fb-login'),
   btnFbLogout: document.getElementById('btn-fb-logout'),
   authStatusContainer: document.getElementById('auth-status-container'),
@@ -132,11 +132,8 @@ async function loadMetricsData(forceFetch = false) {
   setLoading(true, "Gathering active accounts...");
   
   try {
-    if (!state.appId) {
-      throw new Error("No Facebook App ID configured. Set it up in the Setup & API tab first.");
-    }
     if (!state.accessToken) {
-      throw new Error("No active Facebook login session. Authenticate in the Setup & API tab first.");
+      throw new Error("No active Facebook login session. Please authenticate first.");
     }
 
     // 1. Fetch live portfolios and ad accounts if not cached or force requested
@@ -261,22 +258,11 @@ function triggerDashboardRefresh() {
 // --- Live Meta API Authentication Process ---
 
 async function handleFBLogin() {
-  let customId = state.appId ? state.appId.trim() : '';
-  if (!customId) {
-    // Fallback to default system App ID
-    customId = '36377800718500903';
-    state.appId = customId;
-    localStorage.setItem('meta_ads_app_id', customId);
-  }
-  
-  if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = customId;
-  if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = customId;
-
   setLoading(true, "Connecting Facebook SDK...");
   
   try {
     // 1. Initialize SDK
-    await initFacebookSDK(customId);
+    await initFacebookSDK(SYSTEM_FB_APP_ID);
 
     // 2. Perform Login Flow
     setLoading(true, "Launching Meta Auth window...");
@@ -364,26 +350,7 @@ function bindEvents() {
     });
   });
 
-  // 2. Facebook App ID Synced Inputs
-  if (DOM.fbAppIdInput) {
-    DOM.fbAppIdInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      state.appId = val;
-      localStorage.setItem('meta_ads_app_id', val);
-      if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = val;
-    });
-  }
-
-  if (DOM.gateFbAppIdInput) {
-    DOM.gateFbAppIdInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      state.appId = val;
-      localStorage.setItem('meta_ads_app_id', val);
-      if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = val;
-    });
-  }
-
-  // 3. Credentials triggers
+  // 2. Credentials triggers
   if (DOM.btnGateFbLogin) {
     DOM.btnGateFbLogin.addEventListener('click', handleFBLogin);
   }
@@ -441,75 +408,68 @@ function bindEvents() {
 async function appStartup() {
   bindEvents();
 
-  // Populate App ID fields if stored
-  if (state.appId) {
-    if (DOM.fbAppIdInput) DOM.fbAppIdInput.value = state.appId;
-    if (DOM.gateFbAppIdInput) DOM.gateFbAppIdInput.value = state.appId;
-    
-    setLoading(true, "Checking Facebook auth status...");
-    try {
-      let tokenValid = false;
+  setLoading(true, "Checking Facebook auth status...");
+  try {
+    let tokenValid = false;
 
-      // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
-      if (state.accessToken) {
-        try {
-          await fetchUserProfile(state.accessToken);
-          tokenValid = true;
-          console.log("Meta API access token verified successfully!");
-        } catch (err) {
-          console.warn("Cached access token invalid, checking Facebook SDK status...", err);
-        }
+    // 1. Direct validation: Check if existing/pre-populated token is active on Graph API
+    if (state.accessToken) {
+      try {
+        await fetchUserProfile(state.accessToken);
+        tokenValid = true;
+        console.log("Meta API access token verified successfully!");
+      } catch (err) {
+        console.warn("Cached access token invalid, checking Facebook SDK status...", err);
       }
-
-      // 2. If token is invalid/missing, fallback to Facebook SDK check
-      if (!tokenValid) {
-        try {
-          await initFacebookSDK(state.appId);
-          const status = await checkLoginStatus();
-          
-          if (status && status.accessToken) {
-            state.accessToken = status.accessToken;
-            localStorage.setItem('meta_ads_access_token', status.accessToken);
-            tokenValid = true;
-          }
-        } catch (sdkErr) {
-          console.warn("Facebook SDK status retrieval failed:", sdkErr);
-        }
-      }
-      
-      if (tokenValid) {
-        DOM.authStatusContainer.innerHTML = `
-          <div class="auth-status-icon logged-in">
-            <i data-lucide="user-check"></i>
-          </div>
-          <div class="auth-status-details">
-            <span class="auth-status-title" style="color:var(--color-emerald)">Session Active</span>
-            <span class="auth-status-description">Token verified. Ready to sync campaigns.</span>
-          </div>
-        `;
-        DOM.btnFbLogin.classList.add('hidden');
-        DOM.btnFbLogout.classList.remove('hidden');
-        
-        // Hide login gate and show app container
-        if (DOM.loginGate) DOM.loginGate.classList.add('hidden');
-        if (DOM.appContainer) DOM.appContainer.classList.remove('hidden');
-
-        // Load reports
-        await loadMetricsData(true);
-      } else {
-        // No active session or expired
-        localStorage.removeItem('meta_ads_access_token');
-        state.accessToken = '';
-        
-        // Ensure gate is visible and app is hidden
-        if (DOM.loginGate) DOM.loginGate.classList.remove('hidden');
-        if (DOM.appContainer) DOM.appContainer.classList.add('hidden');
-      }
-    } catch (err) {
-      console.warn("Could not check Facebook status during boot:", err);
     }
-  } else {
-    // No App ID configured yet, must show login gate
+
+    // 2. If token is invalid/missing, fallback to Facebook SDK check
+    if (!tokenValid) {
+      try {
+        await initFacebookSDK(SYSTEM_FB_APP_ID);
+        const status = await checkLoginStatus();
+        
+        if (status && status.accessToken) {
+          state.accessToken = status.accessToken;
+          localStorage.setItem('meta_ads_access_token', status.accessToken);
+          tokenValid = true;
+        }
+      } catch (sdkErr) {
+        console.warn("Facebook SDK status retrieval failed:", sdkErr);
+      }
+    }
+    
+    if (tokenValid) {
+      DOM.authStatusContainer.innerHTML = `
+        <div class="auth-status-icon logged-in">
+          <i data-lucide="user-check"></i>
+        </div>
+        <div class="auth-status-details">
+          <span class="auth-status-title" style="color:var(--color-emerald)">Session Active</span>
+          <span class="auth-status-description">Token verified. Ready to sync campaigns.</span>
+        </div>
+      `;
+      DOM.btnFbLogin.classList.add('hidden');
+      DOM.btnFbLogout.classList.remove('hidden');
+      
+      // Hide login gate and show app container
+      if (DOM.loginGate) DOM.loginGate.classList.add('hidden');
+      if (DOM.appContainer) DOM.appContainer.classList.remove('hidden');
+
+      // Load reports
+      await loadMetricsData(true);
+    } else {
+      // No active session or expired
+      localStorage.removeItem('meta_ads_access_token');
+      state.accessToken = '';
+      
+      // Ensure gate is visible and app is hidden
+      if (DOM.loginGate) DOM.loginGate.classList.remove('hidden');
+      if (DOM.appContainer) DOM.appContainer.classList.add('hidden');
+    }
+  } catch (err) {
+    console.warn("Could not check Facebook status during boot:", err);
+    // Ensure gate is visible and app is hidden
     if (DOM.loginGate) DOM.loginGate.classList.remove('hidden');
     if (DOM.appContainer) DOM.appContainer.classList.add('hidden');
   }
