@@ -38,19 +38,31 @@ export function initFacebookSDK(appId) {
     return sdkInitPromise;
   }
 
-  sdkInitPromise = injectSDKScript().then(() => {
-    return new Promise((resolve) => {
+  const sdkPromise = injectSDKScript().then(() => {
+    return new Promise((resolve, reject) => {
+      // Set a safety timeout of 5 seconds to prevent hanging if script is blocked silently
+      const timeoutId = setTimeout(() => {
+        if (!window.FB) {
+          reject(new Error("Facebook SDK initialization timed out (5s). This is typically caused by tracking protection, an ad-blocker, or network restrictions."));
+        }
+      }, 5000);
+
       window.fbAsyncInit = function() {
-        window.FB.init({
-          appId      : appId,
-          cookie     : true,
-          xfbml      : true,
-          version    : 'v18.0'
-        });
-        
-        sdkLoaded = true;
-        console.log("Facebook SDK successfully initialized with App ID:", appId);
-        resolve(window.FB);
+        clearTimeout(timeoutId);
+        try {
+          window.FB.init({
+            appId      : appId,
+            cookie     : true,
+            xfbml      : true,
+            version    : 'v18.0'
+          });
+          
+          sdkLoaded = true;
+          console.log("Facebook SDK successfully initialized with App ID:", appId);
+          resolve(window.FB);
+        } catch (err) {
+          reject(err);
+        }
       };
 
       // In case the SDK script finished loading before window.fbAsyncInit is bound
@@ -58,8 +70,12 @@ export function initFacebookSDK(appId) {
         window.fbAsyncInit();
       }
     });
+  }).catch((err) => {
+    sdkInitPromise = null; // Reset promise cache on failure to allow retry
+    throw err;
   });
 
+  sdkInitPromise = sdkPromise;
   return sdkInitPromise;
 }
 
