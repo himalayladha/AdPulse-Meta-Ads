@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdPulse Analytics - Meta Ads Reporting Tool</title>
+  <meta name="description" content="A premium, real-time analytics and reporting dashboard for Meta Ads. Analyze campaigns, impressions, spend, CTR, CPC, and ROAS with ease.">
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons for Premium UI Visuals -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- ApexCharts CDN for Rich SVG Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <!-- Project Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <!-- Global App Wrapper -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <i data-lucide="activity" class="brand-icon"></i>
+          <span>AdPulse</span>
+        </div>
+        <span class="brand-tag">Meta Ads</span>
+      </div>
+
+      <!-- Mode Switcher Card -->
+      <div class="mode-card">
+        <div class="mode-header">
+          <span class="mode-label">Reporting Mode</span>
+          <span class="mode-badge demo" id="mode-badge">DEMO</span>
+        </div>
+        <button class="mode-toggle-btn" id="toggle-mode-btn">
+          <i data-lucide="database" class="btn-icon"></i>
+          <span id="toggle-mode-txt">Go Live with Meta</span>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active" data-tab="overview">
+            <a href="#overview">
+              <i data-lucide="layout-dashboard"></i>
+              <span>Overview</span>
+            </a>
+          </li>
+          <li data-tab="campaigns">
+            <a href="#campaigns">
+              <i data-lucide="layers"></i>
+              <span>Campaigns</span>
+            </a>
+          </li>
+          <li data-tab="adsets">
+            <a href="#adsets">
+              <i data-lucide="split"></i>
+              <span>Ad Sets</span>
+            </a>
+          </li>
+          <li data-tab="settings">
+            <a href="#settings">
+              <i data-lucide="settings"></i>
+              <span>Setup & API</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Sidebar Footer / Connected Account -->
+      <div class="sidebar-footer">
+        <div class="user-profile" id="user-profile">
+          <div class="user-avatar" id="user-avatar">M</div>
+          <div class="user-details">
+            <span class="user-name" id="user-name">Demo Workspace</span>
+            <span class="user-status" id="user-status">Mock Analytics Enabled</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      
+      <!-- Top Header Controls -->
+      <header class="app-header">
+        <div class="header-left">
+          <h1 class="header-title" id="page-title">Performance Overview</h1>
+          <p class="header-subtitle" id="page-subtitle">Real-time performance reports for your selected ad accounts.</p>
+        </div>
+        
+        <div class="header-controls">
+          <!-- Active Ad Account Selector -->
+          <div class="control-group">
+            <label for="ad-account-select" class="control-label">Ad Account</label>
+            <div class="select-wrapper">
+              <i data-lucide="credit-card" class="select-icon"></i>
+              <select id="ad-account-select">
+                <option value="loading" disabled selected>Loading accounts...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Date Range Selector -->
+          <div class="control-group">
+            <label for="date-range-select" class="control-label">Date Range</label>
+            <div class="select-wrapper">
+              <i data-lucide="calendar" class="select-icon"></i>
+              <select id="date-range-select">
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="last_7d">Last 7 Days</option>
+                <option value="last_30d" selected>Last 30 Days</option>
+                <option value="last_90d">Last 90 Days</option>
+                <option value="this_month">This Month</option>
+                <option value="lifetime">Lifetime</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btn-export-csv" title="Export Current Report to CSV">
+              <i data-lucide="download"></i>
+              <span>Export CSV</span>
+            </button>
+            <button class="btn btn-primary" id="btn-refresh" title="Refresh Live Data">
+              <i data-lucide="refresh-cw"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard View (Overview Panel) -->
+      <section class="tab-panel active" id="panel-overview">
+        
+        <!-- KPI Summary Cards Grid -->
+        <div class="kpi-grid">
+          <!-- KPI 1: Spend -->
+          <div class="kpi-card glass-card ripple-effect">
+            <div class="kpi-header">
+              <span class="kpi-title">Total Spend</span>
+              <div class="kpi-icon-wrap spend">
+                <i data-lucide="dollar-sign"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpi-spend">$0.00</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up" id="trend-spend">
+                <i data-lucide="trending-up"></i> +0.0%
+              </span>
+              <span class="kpi-comparison">vs previous period</span>
+            </div>
+          </div>
+
+          <!-- KPI 2: Conversions -->
+          <div class="kpi-card glass-card ripple-effect">
+            <div class="kpi-header">
+              <span class="kpi-title">Conversions</span>
+              <div class="kpi-icon-wrap conversions">
+                <i data-lucide="shopping-bag"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpi-conversions">0</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up" id="trend-conversions">
+                <i data-lucide="trending-up"></i> +0.0%
+              </span>
+              <span class="kpi-comparison">vs previous period</span>
+            </div>
+          </div>
+
+          <!-- KPI 3: Impressions -->
+          <div class="kpi-card glass-card ripple-effect">
+            <div class="kpi-header">
+              <span class="kpi-title">Impressions</span>
+              <div class="kpi-icon-wrap impressions">
+                <i data-lucide="eye"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpi-impressions">0</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up" id="trend-impressions">
+                <i data-lucide="trending-up"></i> +0.0%
+              </span>
+              <span class="kpi-comparison">vs previous period</span>
+            </div>
+          </div>
+
+          <!-- KPI 4: CTR -->
+          <div class="kpi-card glass-card ripple-effect">
+            <div class="kpi-header">
+              <span class="kpi-title">Avg. CTR</span>
+              <div class="kpi-icon-wrap ctr">
+                <i data-lucide="percent"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpi-ctr">0.00%</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend down" id="trend-ctr">
+                <i data-lucide="trending-down"></i> -0.0%
+              </span>
+              <span class="kpi-comparison">vs previous period</span>
+            </div>
+          </div>
+
+          <!-- KPI 5: CPC -->
+          <div class="kpi-card glass-card ripple-effect">
+            <div class="kpi-header">
+              <span class="kpi-title">Avg. CPC</span>
+              <div class="kpi-icon-wrap cpc">
+                <i data-lucide="mouse-pointer-click"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpi-cpc">$0.00</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend down" id="trend-cpc">
+                <i data-lucide="trending-down"></i> -0.0%
+              </span>
+              <span class="kpi-comparison">vs previous period</span>
+            </div>
+          </div>
+
+          <!-- KPI 6: ROAS -->
+          <div class="kpi-card glass-card ripple-effect">
+            <div class="kpi-header">
+              <span class="kpi-title">ROAS</span>
+              <div class="kpi-icon-wrap roas">
+                <i data-lucide="trending-up"></i>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpi-roas">0.00x</div>
+            <div class="kpi-footer">
+              <span class="kpi-trend up" id="trend-roas">
+                <i data-lucide="trending-up"></i> +0.0%
+              </span>
+              <span class="kpi-comparison">vs previous period</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Analytics Charts -->
+        <div class="charts-grid">
+          <!-- Chart 1: Performance Timeline -->
+          <div class="chart-card glass-card">
+            <div class="chart-card-header">
+              <div class="chart-header-left">
+                <h3 class="chart-card-title">Performance Trend over Time</h3>
+                <p class="chart-card-subtitle">Daily distribution of ad spend and resulting conversion events.</p>
+              </div>
+              <div class="chart-actions">
+                <span class="legend-dot spend"></span> <span class="legend-txt">Spend</span>
+                <span class="legend-dot conversions"></span> <span class="legend-txt">Conversions</span>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <div id="trend-chart-container"></div>
+            </div>
+          </div>
+
+          <!-- Chart 2: Platform Distribution -->
+          <div class="chart-card glass-card">
+            <div class="chart-card-header">
+              <h3 class="chart-card-title">Placement & Channel Spend</h3>
+              <p class="chart-card-subtitle">Distribution of budget across Meta platforms.</p>
+            </div>
+            <div class="chart-wrapper distribution-wrapper">
+              <div id="distribution-chart-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Campaigns Quick List -->
+        <div class="data-table-container glass-card">
+          <div class="table-header">
+            <div class="table-header-left">
+              <h3 class="table-title">Top Performing Campaigns</h3>
+              <p class="table-subtitle">Overview of current ad spend, conversions, and operational status.</p>
+            </div>
+            <div class="table-actions">
+              <a href="#campaigns" class="btn btn-tertiary">
+                <span>View Full List</span>
+                <i data-lucide="arrow-right"></i>
+              </a>
+            </div>
+          </div>
+          <div class="responsive-table">
+            <table class="data-table" id="dashboard-campaigns-table">
+              <thead>
+                <tr>
+                  <th>Campaign Name</th>
+                  <th>Status</th>
+                  <th>Spend</th>
+                  <th>Impressions</th>
+                  <th>Clicks</th>
+                  <th>CTR</th>
+                  <th>Conversions</th>
+                  <th>ROAS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="8" class="text-center py-8">
+                    <span class="loading-spinner"></span> Loading performance data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Campaigns Table View -->
+      <section class="tab-panel" id="panel-campaigns">
+        <div class="data-table-container glass-card">
+          <div class="table-header table-header-advanced">
+            <div class="table-header-left">
+              <h3 class="table-title">All Campaigns</h3>
+              <p class="table-subtitle">Granular performance statistics for your Facebook campaigns.</p>
+            </div>
+            <div class="table-filters">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" placeholder="Search campaigns..." id="campaign-search">
+              </div>
+              <div class="select-wrapper select-inline">
+                <select id="campaign-status-filter">
+                  <option value="ALL">All Delivery Statuses</option>
+                  <option value="ACTIVE">Active Only</option>
+                  <option value="PAUSED">Paused Only</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="responsive-table">
+            <table class="data-table" id="campaigns-list-table">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="name">Campaign Name <i data-lucide="chevrons-up-down"></i></th>
+                  <th>Status</th>
+                  <th>Objective</th>
+                  <th class="sortable" data-sort="spend">Spend <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="impressions">Impressions <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="clicks">Clicks <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="ctr">CTR <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="cpc">CPC <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="conversions">Conversions <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="roas">ROAS <i data-lucide="chevrons-up-down"></i></th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ad Sets View -->
+      <section class="tab-panel" id="panel-adsets">
+        <div class="data-table-container glass-card">
+          <div class="table-header table-header-advanced">
+            <div class="table-header-left">
+              <h3 class="table-title">Ad Set Delivery</h3>
+              <p class="table-subtitle">Monitor ad set metrics, audience delivery, and budget allocations.</p>
+            </div>
+            <div class="table-filters">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" placeholder="Search ad sets..." id="adset-search">
+              </div>
+            </div>
+          </div>
+          <div class="responsive-table">
+            <table class="data-table" id="adsets-list-table">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="name">Ad Set Name <i data-lucide="chevrons-up-down"></i></th>
+                  <th>Status</th>
+                  <th>Campaign Partner</th>
+                  <th class="sortable" data-sort="spend">Spend <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="ctr">CTR <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="cpc">CPC <i data-lucide="chevrons-up-down"></i></th>
+                  <th class="sortable" data-sort="conversions">Conversions <i data-lucide="chevrons-up-down"></i></th>
+                  <th>Bid Strategy</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- API Configuration Panel (Settings) -->
+      <section class="tab-panel" id="panel-settings">
+        <div class="settings-grid">
+          
+          <!-- Instructions Card -->
+          <div class="settings-card glass-card">
+            <h3 class="settings-card-title">
+              <i data-lucide="help-circle"></i> Connecting to the Meta Ads API
+            </h3>
+            <div class="settings-card-body">
+              <p class="instructions-intro">Follow these simple steps to hook this dashboard up to your live Meta advertising records:</p>
+              <ol class="setup-steps">
+                <li>
+                  <span class="step-num">1</span>
+                  <div class="step-content">
+                    <strong>Create a Developer Application:</strong>
+                    Go to the <a href="https://developers.facebook.com/" target="_blank" rel="noopener">Meta for Developers Console</a>, register an account, and click <strong>Create App</strong>. Choose "Other" or "Business" and complete the registration.
+                  </div>
+                </li>
+                <li>
+                  <span class="step-num">2</span>
+                  <div class="step-content">
+                    <strong>Add Facebook Login & Marketing API:</strong>
+                    In your application dashboard, add the <strong>Facebook Login</strong> product and the <strong>Marketing API</strong> product.
+                  </div>
+                </li>
+                <li>
+                  <span class="step-num">3</span>
+                  <div class="step-content">
+                    <strong>Configure Redirect URIs:</strong>
+                    Under Facebook Login Settings, add your development domain (e.g., <code>http://localhost:3000</code> or your hosting domain) to the "Valid OAuth Redirect URIs".
+                  </div>
+                </li>
+                <li>
+                  <span class="step-num">4</span>
+                  <div class="step-content">
+                    <strong>Copy App ID & Log In:</strong>
+                    Copy your App ID from the top menu, paste it into the <strong>API Keys</strong> card to the right, and authenticate your Facebook account to fetch active campaigns!
+                  </div>
+                </li>
+              </ol>
+              <div class="alert-box note">
+                <i data-lucide="info"></i>
+                <div>
+                  <strong>Developer Sandbox Note:</strong> In development mode, only administrative accounts, developer profiles, or authorized test users inside your Meta developer dashboard can log in and retrieve reporting records.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Credentials Input Panel -->
+          <div class="settings-card glass-card">
+            <h3 class="settings-card-title">
+              <i data-lucide="key-round"></i> API Credentials Setup
+            </h3>
+            <div class="settings-card-body">
+              
+              <!-- Mode selector switch inside settings -->
+              <div class="settings-form-row mode-selector-row">
+                <span class="form-row-label">Reporting Context</span>
+                <div class="segmented-control">
+                  <button class="segment-btn active" id="segment-mock-btn">Mock Demo Mode</button>
+                  <button class="segment-btn" id="segment-live-btn">Live Meta API Mode</button>
+                </div>
+              </div>
+
+              <div id="live-setup-form" class="hidden-fade">
+                <div class="settings-form-group">
+                  <label for="fb-app-id" class="form-label">Facebook App ID <span class="required">*</span></label>
+                  <div class="input-icon-wrap">
+                    <i data-lucide="globe"></i>
+                    <input type="text" id="fb-app-id" placeholder="e.g., 847293810283948" value="">
+                  </div>
+                  <p class="form-help-text">Your unique App Identifier obtained from Meta Developers Panel.</p>
+                </div>
+
+                <div class="settings-form-group">
+                  <label class="form-label">Facebook Auth Session</label>
+                  <div class="auth-status-container" id="auth-status-container">
+                    <div class="auth-status-icon logged-out">
+                      <i data-lucide="user-x"></i>
+                    </div>
+                    <div class="auth-status-details">
+                      <span class="auth-status-title" id="auth-status-title">Disconnected</span>
+                      <span class="auth-status-description" id="auth-status-desc">Provide your App ID and log in to establish a session.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="settings-actions">
+                  <button class="btn btn-primary" id="btn-fb-login">
+                    <i data-lucide="facebook"></i>
+                    <span>Login with Facebook</span>
+                  </button>
+                  <button class="btn btn-secondary hidden" id="btn-fb-logout">
+                    <i data-lucide="log-out"></i>
+                    <span>Log Out Session</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="mock-info-panel" class="hidden-fade show">
+                <div class="alert-box success">
+                  <i data-lucide="check-circle2"></i>
+                  <div>
+                    <strong>Demo Mode Active:</strong> You are currently using isolated mock reporting data. High-fidelity metrics, sorting, search, filtering, and chart renders are fully active so you can evaluate the tool.
+                  </div>
+                </div>
+                <div class="mock-stats-display">
+                  <div class="mock-stat-item">
+                    <span class="mock-stat-lbl">Sample Ad Accounts</span>
+                    <span class="mock-stat-val">3 Accounts</span>
+                  </div>
+                  <div class="mock-stat-item">
+                    <span class="mock-stat-lbl">Campaign History Depth</span>
+                    <span class="mock-stat-val">90 Days</span>
+                  </div>
+                  <div class="mock-stat-item">
+                    <span class="mock-stat-lbl">Simulated Insights</span>
+                    <span class="mock-stat-val">Conversions, Spend, Platform distribution</span>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-block" id="btn-trigger-live-switch">
+                  <span>Activate Live Meta Authentication</span>
+                  <i data-lucide="chevron-right"></i>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="global-loading">
+    <div class="loader-content">
+      <div class="loader-pulse"></div>
+      <p class="loader-text" id="global-loading-txt">Syncing Meta Ads API...</p>
+    </div>
+  </div>
+
+  <!-- Client JavaScript Modules -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
