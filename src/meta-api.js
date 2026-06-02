@@ -144,10 +144,11 @@ export async function fetchAdAccounts(accessToken, businessId = 'all') {
  */
 export async function fetchAccountDailyInsights(adAccountId, datePreset, accessToken) {
   // Query insights with a 1-day time increment to construct timelines
+  const apiPreset = datePreset === 'lifetime' ? 'maximum' : datePreset;
   const params = {
     fields: "date_start,spend,impressions,clicks,ctr,cpc,actions,action_values",
     time_increment: "1",
-    date_preset: datePreset,
+    date_preset: apiPreset,
     limit: "100"
   };
 
@@ -181,8 +182,9 @@ export async function fetchAccountDailyInsights(adAccountId, datePreset, accessT
  */
 export async function fetchCampaignsWithInsights(adAccountId, datePreset, accessToken) {
   // We query all campaigns, requesting field 'insights' matching active date preset
+  const apiPreset = datePreset === 'lifetime' ? 'maximum' : datePreset;
   const params = {
-    fields: `name,status,objective,bid_strategy,insights.date_preset(${datePreset}){spend,impressions,clicks,ctr,cpc,actions,action_values}`,
+    fields: `name,status,objective,bid_strategy,insights.date_preset(${apiPreset}){spend,impressions,clicks,ctr,cpc,actions,action_values}`,
     limit: "50"
   };
 
@@ -222,8 +224,9 @@ export async function fetchCampaignsWithInsights(adAccountId, datePreset, access
  * Fetches all ad sets and their insights
  */
 export async function fetchAdSetsWithInsights(adAccountId, datePreset, accessToken) {
+  const apiPreset = datePreset === 'lifetime' ? 'maximum' : datePreset;
   const params = {
-    fields: `name,status,campaign{name},insights.date_preset(${datePreset}){spend,impressions,clicks,ctr,cpc,actions},daily_budget,lifetime_budget`,
+    fields: `name,status,campaign{name},insights.date_preset(${apiPreset}){spend,impressions,clicks,ctr,cpc,actions},daily_budget,lifetime_budget`,
     limit: "50"
   };
 
@@ -262,8 +265,9 @@ export async function fetchAdSetsWithInsights(adAccountId, datePreset, accessTok
  * campaigns spend to distribute among channels in live mode.
  */
 export async function fetchPlacementsWithInsights(adAccountId, datePreset, accessToken) {
+  const apiPreset = datePreset === 'lifetime' ? 'maximum' : datePreset;
   const params = {
-    fields: `insights.date_preset(${datePreset}){spend}`,
+    fields: `insights.date_preset(${apiPreset}){spend}`,
     limit: "100"
   };
   
